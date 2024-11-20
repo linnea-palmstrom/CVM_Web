@@ -1,0 +1,613 @@
+{% extends 'cvm_page_v1.html' %}
+
+{% block style%}
+<!-- Linking external CSS for depth-slice visualization styling -->
+<link rel="stylesheet" href="/static/css/depth-slice.css" />
+{%endblock%}
+
+{% block description%}
+<!-- Detailed description and instructions for using the Depth-Slice Viewer -->
+<div>
+    <h3>Depth-Slice Viewer</h3>
+    <p>
+        The Depth-Slice Viewer allows you to generate an interpolated horizontal slice through a CVM model using the
+        <i>xarray.Dataset.interp</i> routine, or an uninterpolated depth slice from the model's raw data.
+    </p>
+    <p>
+        To create a horizontal-slice (depth-slice) plot, start by selecting a model from the list below and observe the
+        model coverage on the map. Set the corners of your depth-slice using the map markers or by directly entering
+        coordinates. Choose the desired depth and other parameters, then click the <strong>Plot</strong> button to
+        generate
+        the slice.
+    </p>
+    <p>
+        To compare the same slices across different models without automatic parameter updates, enable the lock
+        checkbox.
+        This ensures consistent parameters when switching between models.
+    </p>
+    <p>
+        Finally, select your preferred interpolation method and other processing parameters, then submit to create the
+        slice.
+    </p>
+    <p>
+        <strong><i>Note:</i></strong> Consistency in parameters allows for effective comparisons across different
+        models.
+    </p>
+
+</div>
+{%endblock%}
+
+{% block leftpanel%}
+<div class="action_container">
+
+    <div id="main-container" class="action_side">
+        <!-- Map display for selecting the geographic extent of the depth-slice -->
+        <div id="map-panel" class="action_inner">
+            <div>Coverage areas &amp; CRESCENT Cascadia Fault Traces</div>
+            <div id="map">
+            </div>
+        </div>
+        <div class="action_inner">
+            <!-- Form for depth-slice parameters input -->
+            <form action="/depth-slice-viewer" method="post" id="image-form">
+                <div style="width: 100%;display: flex;flex-direction: row;justify-content: center;">
+
+                    <label for="data-file">Model:</label>
+                    <select id="data-file" name="data_file"></select>
+                </div>
+                <div style="width: 100%;display: flex;flex-direction: row;justify-content: center;">
+                    <label for="title">Plot title:</label>
+                    <input type="text" id="title" name="title" style="width: 50%;">
+                </div>
+                <!-- Input fields for geographic bounds and slicing parameters -->
+                <div class="form-container">
+                    <div class="form-column">
+                        <div class="form-input">
+                            <label for="start-lat">LL-latitude:</label>
+                            <input type="text" id="start-lat" name="start_lat">
+                        </div>
+                        <div class="form-input">
+                            <label for="start-lng">LL-longitude:</label>
+                            <input type="text" id="start-lng" name="start_lng">
+                        </div>
+                        <div class="form-input">
+                            <label for="end-lat">UR-latitude:</label>
+                            <input type="text" id="end-lat" name="end_lat">
+                        </div>
+                        <div class="form-input">
+                            <label for="end-lng">UR-longitude:</label>
+                            <input type="text" id="end-lng" name="end_lng">
+                        </div>
+                        <div class="form-input">
+                            <label for="units">Units:</label>
+                            <select name="units" id="units">
+                                <option value="mks">km.kg.sec</option>
+                                <option value="cgs">m.g.sec</option>
+                            </select>
+                        </div>
+                        <div class="form-input">
+                            <label for="start-depth">Depth:</label>
+                            <input type="text" id="start-depth" name="start_depth">
+                        </div>
+
+                        <div class="form-input">
+                            <label for="interpolation-method">Interpolation:</label>
+                            <select id="interpolation-method" name="interpolation_method">
+                                <option value="none" selected>None</option>
+                                <option value="linear">Linear</option>
+                                <option value="nearest">Nearest</option>
+                                <option value="cubic">Cubic</option>
+
+                            </select>
+                        </div>
+                        <div class="form-input">
+                            <label for="num-points">#&nbsp;longitude&nbsp;samples:</label>
+                            <input type="text" id="lng-points" name="lng_points" value="100">
+                        </div>
+                        <div class="form-input">
+                            <label for="num-points">#&nbsp;latitude&nbsp;samples:</label>
+                            <input type="text" id="lat-points" name="lat_points" value="100">
+                        </div>
+                    </div>
+                    <div class="form-column">
+
+                        <div class="form-input">
+                            <label for="plot-variable">Variable:</label>
+                            <select id="plot-variable" name="plot_variable">
+
+                            </select>
+                        </div>
+
+                        <div class="form-input">
+                            <label for="start-value">Start Value:</label>
+                            <input type="text" id="start-value" name="start_value" value="auto">
+                        </div>
+                        <div class="form-input">
+                            <label for="end-value">End Value:</label>
+                            <input type="text" id="end-value" name="end_value" value="auto">
+                        </div>
+                        <div class="form-input">
+                            <label for="plot-grid-mapping">Grid:</label>
+                            <select id="plot-grid-mapping" name="plot_grid_mapping">
+                                <option value="latitude_longitude">latitude_longitude</option>
+                                <option value="transverse_mercator">transverse_mercator</option>
+                            </select>
+                        </div>
+
+                        <div class="form-input">
+                            <label for="colormap">Colormap:</label>
+                            <select id="colormap" name="colormap">
+                            </select>
+
+                        </div>
+
+                        <div class="form-input">
+                            <label for="image-width">Plot&nbsp;width&nbsp;(in):</label>
+                            <input type="text" id="image-width" name="image_width" value="7">
+                            </select>
+
+                        </div>
+                        <div class="form-input">
+                            <label for="image-height">Plot&nbsp;height&nbsp;(in):</label>
+                            <input type="text" id="image-height" name="image_height" value="12">
+                            </select>
+                        </div>
+                        <div class="form-input">
+                            <label for="subscribeCheckbox">Lock settings:</label>
+                            <input type="checkbox" id="lock" name="lock">
+                        </div>
+                        <div style="clear: both;">
+                        </div>
+
+                    </div>
+
+                </div>
+                <!-- Submission button -->
+                <div class="form-input" style="width: 100%;display: flex;flex-direction: row;justify-content: center;">
+                    <input type="submit" value="Plot" class="button" style="width: 100px;">
+                </div>
+        </div>
+        </form>
+    </div>
+    <!-- Display loading message and results dynamically -->
+    <div id="loadingMessage">Working...</div>
+    <div id="results-panel" class="action_side">
+        <img id="dynamicPlot" src="" alt="Dynamic Plot" style="display:none;">
+        <br>
+        <button id="downloadPlotButton" style="display:none; width:20%;background-color: #004F59;color: white;">Download
+            Plot</button>
+        <br>
+        <button id="downloadDataButton"
+            style="display:none; width:20%;background-color: #004F59; color: white;">Download
+            Data</button>
+
+    </div>
+</div>
+{%endblock%}
+
+{%block scripts %}
+<!-- Import Leaflet for map interaction -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+    async function loadDropdown() {
+        try {
+            const response = await fetch('/models_drop_down');
+            if (response.ok) {
+                const dropdownHTML = await response.text();
+                document.getElementById('data-file').innerHTML = dropdownHTML;
+            } else {
+                console.error('Failed to load dropdown:', response.statusText);
+                document.getElementById('data-file').textContent = 'Failed to load dropdown.';
+            }
+        } catch (error) {
+            console.error('Error fetching dropdown:', error);
+            document.getElementById('data-file').textContent = 'Error loading dropdown.';
+        }
+    }
+
+    // Call loadDropdown when the page has finished loading
+    document.addEventListener('DOMContentLoaded', loadDropdown);
+
+    async function loadColormaps() {
+        try {
+            const response = await fetch('/colormaps');
+            if (response.ok) {
+                const dropdownHTML = await response.text();
+                document.getElementById('colormap').innerHTML = dropdownHTML;
+            } else {
+                console.error('Failed to load dropdown:', response.statusText);
+                document.getElementById('colormap').textContent = 'Failed to load dropdown.';
+            }
+        } catch (error) {
+            console.error('Error fetching dropdown:', error);
+            document.getElementById('colormap').textContent = 'Error loading dropdown.';
+        }
+    }
+
+    // Call loadColormaps when the page has finished loading
+    document.addEventListener('DOMContentLoaded', loadColormaps);
+
+
+    var lat_min = 40;
+    var lat_max = 49;
+    var lat_avg = (lat_min + lat_max) / 2.0
+    var lon_min = -124.8;
+    var lon_max = -120;
+    var lon_avg = (lon_min + lon_max) / 2.0
+    var map = L.map('map').setView([lat_avg, lon_avg], 5);
+    var current_units;
+
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+
+    // Load GeoJSON data
+    fetch('https://raw.githubusercontent.com/cascadiaquakes/crescent-cfm/main/crescent_cfm_files/crescent_cfm_crustal_traces.geojson')
+        .then(response => response.json())
+        .then(data => {
+            // Add 3D GeoJSON layer to the map
+            L.geoJSON(data, {
+                renderer: L.canvas(),
+                style: {
+                    color: 'black',
+                    opacity: 1.0,
+                    weight: 0.8,  // Adjust line width here
+                },
+                onEachFeature: function (feature, layer) {
+                    if (feature.properties && feature.properties.popupContent) {
+                        layer.bindPopup(feature.properties.popupContent);
+                    }
+                }
+            }).addTo(map);
+        })
+        .catch(error => console.error('Error loading GeoJSON:', error));
+
+    var boundingBox;
+
+    // Function to update bounding box
+    function updateBoundingBox(lat_min, lon_min, lat_max, lon_max) {
+        if (boundingBox) {
+            // Remove existing bounding box if present
+            map.removeLayer(boundingBox);
+        }
+        // Calculate new bounding box coordinates based on lat and lng
+        var bounds = L.latLngBounds([
+            [lat_min, lon_min],
+            [lat_max, lon_max]
+        ]);
+        // Draw the new bounding box
+        boundingBox = L.rectangle(bounds, { color: "#ff7800", weight: 1 }).addTo(map);
+    }
+
+    // Initialize markers for left and right points
+    var leftMarker = L.marker([lat_min, lon_min], { draggable: true }).addTo(map);
+    leftMarker.bindTooltip('LL', { permanent: true, className: 'marker-label', direction: "right" });
+    var rightMarker = L.marker([lat_max, lon_max], { draggable: true }).addTo(map);
+    rightMarker.bindTooltip('UR', { permanent: true, className: 'marker-label', direction: "right" });
+
+    // Set min/max values
+    document.getElementById('start-value').value = "auto";
+    document.getElementById('end-value').value = "auto";
+
+    // Set initial interpolation method
+    document.getElementById('interpolation-method').value = "none";
+
+    // Event listener for left marker drag event
+    leftMarker.on('dragend', updateRectangle);
+
+    // Event listener for right marker drag event
+    rightMarker.on('dragend', updateRectangle);
+
+    // Initialize polygon
+    // Assuming leftMarker is the lower left (south-west) corner
+    // and rightMarker is the upper right (north-east) corner
+    var bounds = [leftMarker.getLatLng(), rightMarker.getLatLng()];
+
+    // Create and add the rectangle to the map
+    var rectangle = L.rectangle(bounds, { color: "blue", weight: 1 }).addTo(map);
+
+    // Function to update the rectangle's bounds
+    function updateRectangle() {
+        var leftLat = leftMarker.getLatLng().lat.toFixed(2);
+        var leftLng = leftMarker.getLatLng().lng.toFixed(2);
+        var rightLat = rightMarker.getLatLng().lat.toFixed(2);
+        var rightLng = rightMarker.getLatLng().lng.toFixed(2);
+
+        var newBounds = [leftMarker.getLatLng(), rightMarker.getLatLng()];
+        rectangle.setBounds(newBounds);
+        // Update form fields
+        document.getElementById('start-lat').value = leftLat;
+        document.getElementById('start-lng').value = leftLng;
+        document.getElementById('end-lat').value = rightLat;
+        document.getElementById('end-lng').value = rightLng;
+    }
+
+    // Listen for the 'dragend' event on both markers
+    leftMarker.on('dragend', updateRectangle);
+    rightMarker.on('dragend', updateRectangle);
+
+    // Function to handle form submission
+    function handleSubmit(event) {
+        const loadingElement = document.getElementById('loadingMessage');
+        loadingElement.style.display = 'block'; // Show the loading message
+
+        event.preventDefault(); // Prevent the default form submission
+        var form = event.target; // Get the form element
+        var url = form.action; // Get the action URL of the form
+        var formData = new FormData(form); // Create FormData object from the form data
+        // Make a POST request to the CGI script
+        fetch(url, {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                const imageUrl = `data:image/png;base64,${data.image}`;
+                document.getElementById('dynamicPlot').src = imageUrl;
+                document.getElementById('dynamicPlot').style.display = 'block';
+                document.getElementById('downloadPlotButton').addEventListener('click', () => {
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = imageUrl;
+                    downloadLink.download = 'plot.png';
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+                });
+                document.getElementById('downloadPlotButton').style.display = 'inline';
+                document.getElementById('downloadDataButton').addEventListener('click', () => {
+                    const csvData = `data:text/csv;base64,${data.csv_data}`;
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = csvData;
+                    downloadLink.download = 'data.csv';
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+                });
+                document.getElementById('downloadDataButton').style.display = 'inline';
+                loadingElement.style.display = 'none';
+            })
+            .catch(error => console.error('Error fetching plot and data:', error));
+
+    }
+
+    // Add event listener to the form for submit event
+    document.getElementById('image-form').addEventListener('submit', handleSubmit);
+    // Assuming leftMarker and rightMarker are your Leaflet marker objects
+    // and polyline is your Leaflet polyline object
+
+    function isValidLatitude(lat) {
+        return !isNaN(lat) && lat >= -90 && lat <= 90;
+    }
+
+    function isValidLongitude(lng) {
+        return !isNaN(lng) && lng >= -180 && lng <= 180;
+    }
+
+    function updateMarkersFromForm() {
+        // Get the new positions from the form
+        var newStartLat = parseFloat(document.getElementById('start-lat').value);
+        var newStartLng = parseFloat(document.getElementById('start-lng').value);
+        var newEndLat = parseFloat(document.getElementById('end-lat').value);
+        var newEndLng = parseFloat(document.getElementById('end-lng').value);
+
+        lat_min = newStartLat;
+        lat_max = newEndLat;
+        lat_avg = (lat_min + lat_max) / 2.0
+        lon_min = newStartLng;
+        lon_max = newEndLng;
+        lon_avg = (lon_min + lon_max) / 2.0
+
+        if (!map) {
+            map = L.map('map').setView([lat_avg, lon_avg], 5);
+        }
+
+        // Validate the new positions
+        if (!isValidLatitude(newStartLat) || !isValidLongitude(newStartLng)) {
+            alert("Invalid Start Position");
+            return;
+        }
+        if (!isValidLatitude(newEndLat) || !isValidLongitude(newEndLng)) {
+            alert("Invalid End Position");
+            return;
+        }
+
+        // Update marker positions if valid
+        leftMarker.setLatLng([newStartLat, newStartLng]);
+        rightMarker.setLatLng([newEndLat, newEndLng]);
+
+        updateRectangle();
+
+    }
+
+    // Attach event listeners to the form fields
+    document.getElementById('start-lat').addEventListener('change', updateMarkersFromForm);
+    document.getElementById('start-lng').addEventListener('change', updateMarkersFromForm);
+    document.getElementById('end-lat').addEventListener('change', updateMarkersFromForm);
+    document.getElementById('end-lng').addEventListener('change', updateMarkersFromForm);
+
+    function updateFormFields(fileName) {
+        const locked = document.getElementById('lock').checked;
+        var vertical_units;
+
+        fetch(fileName)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Assuming the JSON structure matches your form fields' ids
+                for (const [key, value] of Object.entries(data)) {
+                    if (key == "geospatial_lon_min") {
+                        if (!locked) document.getElementById('start-lng').value = value;
+                        lon_min = parseFloat(value);
+                    }
+                    else if (key == "geospatial_lon_max") {
+                        if (!locked) document.getElementById('end-lng').value = value;
+                        lon_max = parseFloat(value);
+                    }
+                    else if (key == "geospatial_lat_min") {
+                        if (!locked) document.getElementById('start-lat').value = value;
+                        lat_min = parseFloat(value);
+                    }
+                    else if (key == "geospatial_vertical_units") {
+                        vertical_units = value;
+                    }
+                    else if (key == "geospatial_lat_max") {
+                        if (!locked) document.getElementById('end-lat').value = value;
+                        lat_max = parseFloat(value);
+                    }
+                    else if (key == "geospatial_vertical_max") {
+                        if (!locked) document.getElementById('start-depth').value = parseFloat(value) / 2.0;
+                    }
+                    else if (key == "model") {
+                        if (!locked) document.getElementById('title').value = value;
+                    }
+
+                    else if (key == "data_vars") {
+
+                        // Find the select element
+                        var selectElement = document.getElementById('plot-variable');
+                        // Populate the select element with options
+                        selectElement.options.length = 0;
+                        value.forEach(val => {
+                            const option = new Option(val, val);
+                            selectElement.add(option);
+                        });
+
+
+                        var start_label = document.querySelector('label[for="start-value"]');
+                        start_label.textContent = "Min. " + selectElement.value;
+                        var end_label = document.querySelector('label[for="end-value"]');
+                        end_label.textContent = "Max. " + selectElement.value;
+
+                        var cmap_label = document.querySelector('label[for="colormap"]');
+                        cmap_label.textContent = selectElement.value + " colormap";
+                    }
+
+                }
+                // Adjust the depth based on units.
+                if (!locked) {
+
+                    if (document.getElementById('units').value == "cgs") {
+
+                        if (vertical_units == "km") {
+                            document.getElementById('start-depth').value = 1000 * parseFloat(document.getElementById('start-depth').value);
+                            //document.getElementById('units').value = "mks"
+                        }
+                    }
+                    else {
+                        if (vertical_units == "m") {
+                            document.getElementById('start-depth').value = parseFloat(document.getElementById('start-depth').value) / 1000;
+
+                            //document.getElementById('units').value = "cgs"
+                        }
+                    }
+                }
+                updateBoundingBox(lat_min, lon_min, lat_max, lon_max)
+                if (!locked) {
+                    leftMarker.remove();
+                    leftMarker = L.marker([lat_min, lon_min], { draggable: true }).addTo(map);
+                    leftMarker.bindTooltip('LL', { permanent: true, className: 'marker-label', direction: "right" });
+                    rightMarker.remove();
+                    rightMarker = L.marker([lat_max, lon_max], { draggable: true }).addTo(map);
+                    rightMarker.bindTooltip('UR', { permanent: true, className: 'marker-label', direction: "right" });
+                    updateRectangle();
+                    // Event listener for left marker drag event
+                    leftMarker.on('dragend', updateRectangle);
+
+                    // Event listener for right marker drag event
+                    rightMarker.on('dragend', updateRectangle);
+                }
+
+
+            })
+            .catch(error => console.error('Error fetching the JSON file:', error));
+    }
+
+    // Event listener for when the element gains focus
+    document.getElementById('units').onfocus = function () {
+        // Store the current value when the element is focused
+        current_units = document.getElementById('units').value;
+    };
+
+    document.getElementById('units').addEventListener('change', function () {
+        // Adjust the depth based on units.
+        const new_units = document.getElementById('units').value;
+        if (new_units == "cgs") {
+
+            if (current_units == "mks") {
+                current_units = "cgs"
+                document.getElementById('start-depth').value = 1000 * parseFloat(document.getElementById('start-depth').value);
+            }
+        }
+        else {
+            if (current_units == "cgs") {
+                current_units = "mks"
+                document.getElementById('start-depth').value = parseFloat(document.getElementById('start-depth').value) / 1000;
+            }
+        }
+
+    });
+
+    document.getElementById('data-file').addEventListener('change', function () {
+        const filename = document.getElementById('data-file').value
+        const regex = /.nc/i;
+        var jsonFlename = filename.replace(regex, '.json')
+        // Field is found, execute your function
+        jsonFlename = '../static/json/' + jsonFlename;
+        updateFormFields(jsonFlename)
+        // You can replace the console.log with any code to handle the change
+    });
+
+    document.getElementById('plot-variable').addEventListener('change', function () {
+        var selectElement = document.getElementById('plot-variable');
+
+        var start_label = document.querySelector('label[for="start-value"]');
+        start_label.textContent = "Min. " + selectElement.value;
+        var end_label = document.querySelector('label[for="end-value"]');
+        end_label.textContent = "Max. " + selectElement.value;
+
+        var cmap_label = document.querySelector('label[for="colormap"]');
+        cmap_label.textContent = selectElement.value + " colormap";
+
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Define the function to execute when mutations are observed
+        const callback = function (mutationsList, observer) {
+            for (const mutation of mutationsList) {
+                if (mutation.type === 'childList') {
+                    const dynamicField = document.getElementById('data-file');
+
+                    if (dynamicField.value) {
+                        const regex = /.nc/i;
+                        const jsonFlename = dynamicField.value.replace(regex, '.json')
+                        // Field is found, execute your function
+                        updateFormFields('../static/json/' + jsonFlename);
+
+                        // Optionally, disconnect the observer if it's no longer needed
+                        observer.disconnect();
+                        break;
+                    }
+                }
+            }
+        };
+
+        // Create an instance of MutationObserver with the callback
+        const observer = new MutationObserver(callback);
+
+        // Options for the observer (which mutations to observe)
+        const config = { childList: true, subtree: true };
+
+        // Start observing the document body for DOM changes
+        observer.observe(document.body, config);
+    });
+
+
+</script>
+
+{%endblock%}

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CesiumJS Draggable Marker and Polygon</title>
+    <script src="https://cesium.com/downloads/cesiumjs/releases/1.93/Build/Cesium/Cesium.js"></script>
+    <style>
+        #cesiumContainer {
+            width: 100%;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+            display: block;
+        }
+        #toolbar {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1;
+            background: white;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="cesiumContainer"></div>
+    <div id="toolbar">
+        <button onclick="resetPolygon()">Reset Polygon</button>
+    </div>
+    <script>
+        // Initialize the Cesium Viewer
+        var viewer = new Cesium.Viewer('cesiumContainer', {
+            terrainProvider: Cesium.createWorldTerrain()
+        });
+
+        // Initial position of the marker and polygon vertices
+        var initialPosition = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
+        var positions = [
+            Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+            Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+            Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883)
+        ];
+
+        // Add a marker (billboard) to the map
+        var marker = viewer.entities.add({
+            position: initialPosition,
+            billboard: {
+                image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/Red_flag_waving.svg/1024px-Red_flag_waving.svg.png',
+                width: 32,
+                height: 32
+            }
+        });
+
+        // Add a polygon to the map
+        var polygon = viewer.entities.add({
+            polygon: {
+                hierarchy: new Cesium.CallbackProperty(function () {
+                    return new Cesium.PolygonHierarchy(positions);
+                }, false),
+                material: Cesium.Color.RED.withAlpha(0.5)
+            }
+        });
+
+        // Variables to handle dragging
+        var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+        var isDragging = false;
+        var pickedEntity;
+
+        handler.setInputAction(function (movement) {
+            var pickedObject = viewer.scene.pick(movement.position);
+            if (Cesium.defined(pickedObject) && pickedObject.id === marker) {
+                isDragging = true;
+                pickedEntity = pickedObject.id;
+                viewer.scene.screenSpaceCameraController.enableRotate = false; // Disable map rotation while dragging
+            }
+        }, Cesium.ScreenSpaceEventType.LEFT_DOWN);
+
+        handler.setInputAction(function (movement) {
+            if (isDragging) {
+                var cartesian = viewer.camera.pickEllipsoid(movement.endPosition, viewer.scene.globe.ellipsoid);
+                if (cartesian) {
+                    pickedEntity.position = cartesian;
+
+                    // Update the polygon vertices
+                    positions[0] = cartesian;
+                    positions[1] = Cesium.Cartesian3.fromDegrees(
+                        Cesium.Cartographic.fromCartesian(cartesian).longitude * (180 / Math.PI) + 0.01,
+                        Cesium.Cartographic.fromCartesian(cartesian).latitude * (180 / Math.PI)
+                    );
+                    positions[2] = Cesium.Cartesian3.fromDegrees(
+                        Cesium.Cartographic.fromCartesian(cartesian).longitude * (180 / Math.PI),
+                        Cesium.Cartographic.fromCartesian(cartesian).latitude * (180 / Math.PI) - 0.01
+                    );
+                }
+            }
+        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+        handler.setInputAction(function () {
+            isDragging = false;
+            viewer.scene.screenSpaceCameraController.enableRotate = true; // Re-enable map rotation
+        }, Cesium.ScreenSpaceEventType.LEFT_UP);
+
+        // Reset Polygon Button
+        function resetPolygon() {
+            marker.position = initialPosition;
+            positions = [
+                Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+                Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883 + 0.01),
+                Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883 - 0.01)
+            ];
+        }
+    </script>
+</body>
+</html>
+

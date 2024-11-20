@@ -1,0 +1,19 @@
+{
+    "model": "Cascadia_ANT+RF_Delph2018",
+    "geospatial_lon_min": -124.8,
+    "geospatial_lon_max": -120.0,
+    "geospatial_lat_min": 40.0,
+    "geospatial_lat_max": 49.0,
+    "geospatial_vertical_min": -3.0,
+    "geospatial_vertical_max": 80.0,
+    "geospatial_vertical_units": "km",
+    "num_images": 63,
+    "dir_name": "/static/images/Cascadia_vs_slice_states_and_screenshots_correct_orientation/",
+    "img_stem": "Cascadia_vs_slice-",
+    "lon_axis_num_images": 37,
+    "lon_axis_dir_name": "/static/images/Cascadia_vs_x_axis_slice_states_and_screenshots_90_rotation/",
+    "lon_axis_img_stem": "Cascadia_vs_slice-",
+    "lat_axis_num_images": 56,
+    "lat_axis_dir_name": "/static/images/Cascadia_vs_y_axis_slice_states_and_screenshots_90_rotation/",
+    "lat_axis_img_stem": "Cascadia_vs_slice-"
+}

@@ -1,0 +1,86 @@
+{
+    "model": "casc1.6_velmdl",
+    "id": "casc1.6_velmdl",
+    "title": "P- and S-wave Seismic Velocity Models Incorporating the Cascadia Subduction Zone",
+    "summary": "P- and S-wave Seismic Velocity Models Incorporating the Cascadia Subduction Zone for 3D Earthquake Ground Motion simulations- Update for Open-File Report 2007-1348",
+    "reference": "Stephenson, Reitman, and Angster (2017)",
+    "reference_pid": "doi:10.3133/ofr20171152",
+    "revision": "r0.1",
+    "Version": "v0.0",
+    "Conventions": "CF-1.0",
+    "Metadata_Conventions": "Unidata Dataset Discovery v1.0",
+    "author_name": "William J. Stephenson",
+    "author_email": "manochehr.bahavar@earthscope.org",
+    "author_institution": "USGS",
+    "author_url": "https://pubs.usgs.gov/publication/ofr20171152",
+    "repository_name": "EMC",
+    "repository_institution": "EarthScope",
+    "repository_pid": "doi:1234.567890",
+    "geospatial_lon_min": -130.1,
+    "geospatial_lon_max": -121.0,
+    "geospatial_on_units": "degrees_east",
+    "geospatial_on_resolution": 1.0,
+    "geospatial_lat_min": 40.2,
+    "geospatial_lat_max": 50.0,
+    "geospatial_lat_units": "degrees_north",
+    "geospatial_lat_resolution": 1.0,
+    "geospatial_vertical_min": 0.0,
+    "geospatial_vertical_max": 60000.0,
+    "geospatial_vertical_units": "m",
+    "geospatial_vertical_positive": "down",
+    "keywords": "seismic,tomography,shearwave,swave,elasticwaveform,CascadiaSubductionZone",
+    "acknowledgment": "Model from USGS Open-File Report 2007-1348",
+    "history": "[2024-01-18] CRESCENT Format conversion tool",
+    "comments": "model converted to netCDF by CRESCENT CVM",
+    "grid_mapping_name": "transverse_mercator",
+    "utm_zone": 10,
+    "ellipsoid": "WGS84",
+    "data_vars": [
+        "vp",
+        "vs"
+    ],
+    "depth": {
+        "variable": "depth",
+        "standard_name": "depth",
+        "long_name": "depth below sea level",
+        "units": "m"
+    },
+    "y": {
+        "variable": "northing",
+        "standard_name": "northing",
+        "long_name": "northing; UTM",
+        "units": "m"
+    },
+    "x": {
+        "variable": "easting",
+        "standard_name": "easting",
+        "long_name": "easting; UTM",
+        "units": "m"
+    },
+    "longitude": {
+        "variable": "longitude",
+        "standard_name": "longitude",
+        "long_name": "Longitude; positive east",
+        "units": "degrees_east"
+    },
+    "latitude": {
+        "variable": "latitude",
+        "long_name": "Latitude; positive north",
+        "units": "degrees_north",
+        "standard_name": "latitude"
+    },
+    "vp": {
+        "variable": "vp",
+        "long_name": "P-wave velocity",
+        "display_name": "P Velocity (m/s)",
+        "units": "m.s-1",
+        "grid_mapping": "transverse_mercator"
+    },
+    "vs": {
+        "variable": "vs",
+        "long_name": "Shear-wave velocity",
+        "display_name": "S Velocity (m/s)",
+        "units": "m.s-1",
+        "grid_mapping": "transverse_mercator"
+    }
+}

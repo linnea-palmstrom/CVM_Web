@@ -1,0 +1,257 @@
+{% extends 'cvm_page_v1.html' %}
+
+{% block style%}
+<link rel="stylesheet" href="/static/css/repository.css" />
+{%endblock%}
+{% block description%}
+<div>
+
+    <h3>CVM Repository</h3>
+    <p>
+        Welcome to the repository for the CRESCENT Community Velocity Models (CVM). This platform is dedicated to
+        facilitating access to a wide array of community velocity models developed as part of the CRESCENT project.
+        CVM-Web
+        offers advanced visualization tools for model previews, capabilities for extracting model data and metadata, and
+        access to a variety of contributed processing software and scripts. This resource is designed to support
+        CRESCENT
+        researchers in creating, exploring, analyzing, and utilizing velocity models effectively.
+    </p>
+    <p>
+        To explore the repository, click on any of the available models listed below. Detailed information about your
+        selection, including area coverage and associated metadata, will be displayed on the right-hand side of the
+        interface.
+    </p>
+</div>
+{%endblock%}
+{% block leftpanel%}
+<div id="fileListPanel">
+    <div id="fileTable"></div>
+    <div>
+        This is a test
+    </div>
+</div>
+
+{%endblock%}
+{%block rightpanel%}
+<div id="contentPanel">
+    <br /><span id="cmodelname"></span> coverage &amp; CRESCENT Cascadia fault traces
+    <div id="results-panel" class="action_side" style="flex:0 0 67.5%;">
+
+        <iframe src="/data/3d-slice" width="99.5%" height="1200px" id="3dIframe"></iframe>
+
+    </div>
+</div>
+{%endblock%}
+{%block scripts %}
+<script>
+
+    /**
+     * Generates HTML content from a given JSON object, handling nested structures recursively.
+     * 
+     * @param {Object} jsonData - The JSON object to be converted into HTML.
+     * @returns {string} - The generated HTML content as a string.
+     */
+    function createHtmlFromJson(jsonData) {
+        /**
+         * Recursively processes JSON data to generate HTML content.
+         * 
+         * @param {Object} jsonData - The current level of the JSON object to be processed.
+         * @returns {string} - The HTML content for the current level of the JSON object.
+         */
+        function processJson(jsonData) {
+            let htmlContent = '<div class="json-container">';
+            for (let key in jsonData) {
+                if (typeof jsonData[key] === 'object' && jsonData[key] !== null) {
+                    htmlContent += `<div><b>${key}:</b>${processJson(jsonData[key])}</div>`;
+                } else {
+                    htmlContent += `<div><b>${key}:</b> ${jsonData[key]}</div>`;
+                }
+            }
+            htmlContent += '</div>';
+            return htmlContent;
+        }
+
+        return processJson(jsonData);
+    }
+
+    // Change form's selection
+    function selectOptionInForm(model) {
+        const select = document.getElementById('data-file');
+        let optionFound = false;
+
+        if (select) {
+            for (let i = 0; i < select.options.length; i++) {
+                alert(select.options[i].text + " === " + model)
+                if (select.options[i].text === model) {
+                    select.selectedIndex = i;
+                    optionFound = true;
+                    // Trigger the change event
+                    const event = new Event('change');
+                    select.dispatchEvent(event);
+                    break;
+                }
+            }
+
+            if (!optionFound) {
+                alert('Error: Option not found');
+            }
+        } else {
+            alert('Error: Select element not found in form: ' + model);
+        }
+    }
+
+
+
+    // Monitor iframes selection change 
+    function monitorIframeSelection() {
+        const iframe = document.getElementById('3dIframe');
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+        let previousValue = '';
+
+        if (iframeDoc) {
+            const select = iframeDoc.getElementById('data-file');
+            if (select) {
+                setInterval(() => {
+                    const currentValue = select.options[select.selectedIndex].text;
+                    if (currentValue !== previousValue) {
+                        previousValue = currentValue;
+                        //selectOptionInForm(currentValue);
+                        // Handle the selection change as needed
+                        loadFileListAndJSON(currentValue)
+                    }
+                }, 1000); // Check every second (adjust the interval as needed)
+            } else {
+                console.error('Select element not found in iframe');
+            }
+        } else {
+            console.error('Iframe document not accessible');
+        }
+    }
+
+    window.onload = function () {
+        monitorIframeSelection();
+    }
+
+    // Function to fetch the CGI script output and inject it into the <div>
+    function loadFileListAndJSON(model) {
+
+        var count = 0;
+        // (39, -130), (39, -116), (52, -130), (52, -116)
+        let proj_lat_min = 39;
+        let proj_lat_max = 52;
+        let proj_lon_min = -130;
+        let proj_lon_max = -116;
+        let lat_min = 39;
+        let lat_max = 52;
+        let lon_min = -130;
+        let lon_max = -116;
+
+        let summary = "-";
+        let filename = "-";
+
+        function hideAllRadioButtonsExceptChecked() {
+            const radios = fileTable.querySelectorAll('input[type="radio"]');
+            radios.forEach(radio => {
+                if (radio.checked) {
+                    radio.disabled = false; // Make sure it's enabled
+                    radio.parentNode.style.opacity = 1; // Full opacity for checked
+                    radio.parentNode.style.backgroundColor = ''; // Reset background if needed
+                } else {
+                    radio.disabled = true; // Disable the radio
+                    radio.parentNode.style.opacity = 0.5; // Lower opacity for unchecked
+                    radio.parentNode.style.backgroundColor = 'white'; // Apply a background color
+                }
+            });
+        }
+
+
+        // Change the iframe's selection
+        function selectOptionInIframe(model) {
+            const iframe = document.getElementById('3dIframe');
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            const select = iframeDoc.getElementById('data-file');
+            let optionFound = false;
+
+            if (select) {
+                for (let i = 0; i < select.options.length; i++) {
+                    if (select.options[i].text === model) {
+                        select.selectedIndex = i;
+                        optionFound = true;
+                        // Trigger the change event
+                        const event = new Event('change');
+                        select.dispatchEvent(event);
+                        break;
+                    }
+                }
+
+                if (!optionFound) {
+                    alert('Error: Option not found');
+                }
+            } else {
+                alert('Error: Select element not found in iframe');
+            }
+        }
+
+        fetch('/list_json_files/' + model) // Replace with the URL to your CGI script
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text(); // Assuming CGI script returns HTML
+            })
+            .then(html => {
+
+                // Inject the received HTML into the fileTable div
+                fileTable.innerHTML = html;
+                var firstFileName = fileTable.querySelector('tr:nth-child(2) td:nth-child(8)').textContent.trim();
+                var firstFilePath = '../static/json/' + firstFileName + '.json';
+                var radio = fileTable.querySelector('input[type="radio"]');
+                radio.checked = true;
+                hideAllRadioButtonsExceptChecked();
+                model = fileTable.querySelector('tr:nth-child(2) td:nth-child(2)').textContent.trim();
+                summary = fileTable.querySelector('tr:nth-child(2) td:nth-child(3)').textContent.trim();
+                lat_min = fileTable.querySelector('tr:nth-child(2) td:nth-child(4)').textContent.trim();
+                lat_max = fileTable.querySelector('tr:nth-child(2) td:nth-child(5)').textContent.trim();
+                lon_min = fileTable.querySelector('tr:nth-child(2) td:nth-child(6)').textContent.trim();
+                lon_max = fileTable.querySelector('tr:nth-child(2) td:nth-child(7)').textContent.trim();
+                filename = fileTable.querySelector('tr:nth-child(2) td:nth-child(8)').textContent.trim();
+
+                const cmodelname = document.getElementById('cmodelname');
+                cmodelname.innerHTML = model;
+
+                // Attach event listener to table rows
+                fileTable.addEventListener('click', function (event) {
+                    const iframe = document.getElementById('3dIframe');
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    var target = event.target;
+                    if (target.tagName === 'TD' && target.parentNode.cells[1] === target) {
+                        model = target.parentNode.cells[1].textContent;
+                        summary = target.parentNode.cells[2].textContent;
+                        lat_min = target.parentNode.cells[3].textContent;
+                        lat_max = target.parentNode.cells[4].textContent;
+                        lon_min = target.parentNode.cells[5].textContent;
+                        lon_max = target.parentNode.cells[6].textContent;
+                        filename = target.parentNode.cells[7].textContent;
+                        var fileName = target.textContent.trim();
+
+                        selectOptionInIframe(model)
+                        var filePath = '../static/json/' + filename + '.json';
+                        var radio = target.parentNode.cells[0].querySelector('input[type="radio"]');
+                        radio.checked = true;
+                        hideAllRadioButtonsExceptChecked();
+                        cmodelname.innerHTML = model;
+
+
+
+                    }
+                });
+            })
+            .catch(error => console.error('Error fetching file list:', error));
+
+    }
+
+    // Call the function when the page loads
+    window.addEventListener('load', loadFileListAndJSON(""));
+</script>
+
+{%endblock%}

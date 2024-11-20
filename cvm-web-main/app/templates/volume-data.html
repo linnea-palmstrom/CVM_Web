@@ -1,0 +1,560 @@
+{% extends 'cvm_page_v1.html' %}
+
+{% block style%}
+<!-- Linking external CSS for depth-slice visualization styling -->
+<link rel="stylesheet" href="/static/css/depth-slice.css" />
+{%endblock%}
+
+{% block description%}
+<!-- Detailed description and instructions for using the Depth-Slice Viewer -->
+<div>
+    <h1>Volume Data Extraction Tool</h1>
+    <p>The Volume Data Extraction Tool offers customized access to CVM datasets. This user-friendly interface allows you
+        to
+        specify geographic parameters to retrieve data tailored to your specific needs.</p>
+
+    <h2>Key Features:</h2>
+    <ul>
+        <li><strong>Custom Selection:</strong> Use the 3D map to select the desired model, geographic extent, and depth
+            range for extraction. The map includes CFM (Community Fault Model) details to aid your selection.</li>
+        <li><strong>Flexible Output:</strong> Choose your preferred data format.</li>
+        <li><strong>Interactive Interface:</strong> Our web-based tool is straightforward, allowing quick access and
+            download of data. Click on map features for additional information.</li>
+    </ul>
+
+    <h2>How to Use:</h2>
+    <ol>
+        <li><strong>Select an Earth Model:</strong> Start by choosing an earth model from the map interface.</li>
+        <li><strong>Define Geographic Limits:</strong> Adjust the latitude and longitude boundaries along with the depth
+            range to define the sub-volume you want to extract.</li>
+        <li><strong>Copy Parameters:</strong> Use the 'Copy values from the map' button to transfer your map selections
+            to
+            the request form.</li>
+        <!-- <li><strong>Choose the Units:</strong> From the output units dropdown menu, select how you want the output units
+            to
+            be displayed, either as kg&middot;km&middot;sec or g&middot;m&middot;sec.</li>-->
+        <li><strong>Choose Output Format:</strong> Select the data format that best suits your analysis tools.</li>
+        <li><strong>Extract Data:</strong> Submit your request. The system will process your inputs and generate the
+            requested data subset, which you can then download directly from the interface.</li>
+    </ol>
+
+</div>
+{%endblock%}
+
+{% block leftpanel%}
+<div class="action_container">
+
+    <div id="main-container" class="action_side" style="flex:0 0 30%;">
+        <div class="action_inner">
+            <!-- Form for depth-slice parameters input -->
+            <form action="/data/extract-volume-data" method="get" id="image-form">
+
+                <!-- Input fields for geographic bounds and slicing parameters -->
+                <div class="form-container" style="width:100%;">
+                    <div class="form-column">
+                        <div class="form-input">
+
+                            <label for="data-file">Model:</label>
+                            <select id="data-file" name="data_file"></select>
+                        </div>
+
+                        <div class="form-input">
+                            <label for="start-lng">Min. longitude:</label>
+                            <input type="text" id="start-lng" name="start_lng">
+                        </div>
+                        <div class="form-input">
+                            <label for="end-lng">Max. longitude:</label>
+                            <input type="text" id="end-lng" name="end_lng">
+                        </div>
+                        <div class="form-input">
+                            <label for="start-lat">Min. latitude:</label>
+                            <input type="text" id="start-lat" name="start_lat">
+                        </div>
+                        <div class="form-input">
+                            <label for="end-lat">Max. latitude:</label>
+                            <input type="text" id="end-lat" name="end_lat">
+                        </div>
+                        <div class="form-input">
+                            <label for="start-depth">Min. depth:</label>
+                            <input type="text" id="start-depth" name="start_depth">
+                        </div>
+                        <div class="form-input">
+                            <label for="end-depth">Max. depth:</label>
+                            <input type="text" id="end-depth" name="end_depth">
+                        </div>
+                        <!--<div class="form-input">
+                            <label for="units">Output units:</label>
+                            <select name="units" id="units">
+                                <option value="mks">km.kg.sec</option>
+                                <option value="cgs">m.g.sec</option>
+                            </select>
+                        </div>-->
+                        <!-- <div class="form-input">
+                            <label for="interpolation-method">Interpolation:</label>
+                            <select id="interpolation-method" name="interpolation_method">
+                                <option value="none" selected>None</option>
+                                <option value="linear">Linear</option>
+                                <option value="nearest">Nearest</option>
+                                <option value="cubic">Cubic</option>
+
+                            </select>
+                        </div>
+                        <div class="form-input">
+                            <label for="lng-points">#&nbsp;longitude&nbsp;samples:</label>
+                            <input type="text" id="lng-points" name="lng_points" value="100">
+                        </div>
+                        <div class="form-input">
+                            <label for="lat-points">#&nbsp;latitude&nbsp;samples:</label>
+                            <input type="text" id="lat-points" name="lat_points" value="100">
+                        </div>-->
+                    </div>
+                    <div class="form-column">
+
+                        <div class="form-input">
+                            <label for="variables">Variable(s):</label>
+                            <select id="variables" name="variables" multiple required>
+
+                            </select>
+
+                            <input type="hidden" id="variables_hidden" name="variables_hidden">
+
+                        </div>
+                        <div class="form-input">
+                            <label for="output-format">Output format:</label>
+                            <select id="output-format" name="output_format">
+                                <option value="csv" selected>CSV</option>
+                                <option value="geocsv">GeoCSV</option>
+                                <option value="netcdf">netCDF</option>
+                            </select>
+
+                        </div>
+                        <div class="form-input">
+                            <label for="subscribeCheckbox">Lock settings:</label>
+                            <input type="checkbox" id="lock" name="lock">
+                        </div>
+
+                        <!-- Submission button -->
+                        <div class="form-input">
+                            <input type="submit" value="Download" class="button" style="width: 100px;">
+
+                        </div>
+                        <!-- Display loading message and results dynamically -->
+                        <label for="requestUrl">Direct request URL:</label>
+                        <div id="requestUrl" style="width:250px;"></div><br /><br />
+                        <hr />
+                        <div id="dataLoadingMessage" style="display: none;">...requesting</div>
+                    </div>
+                </div>
+            </form>
+            <div class="form-container"><button onclick="copyFormValues()" class="button" style="width: 100px;">Copy
+                    Values from
+                    Map</button></div>
+            <div>&nbsp;</div>
+        </div>
+    </div>
+
+    <div id="results-panel" class="action_side" style="flex:0 0 67.5%;">
+
+        <iframe src="/data/3d" width="99.5%" height="1200px" id="3dIframe"></iframe>
+
+    </div>
+</div>
+{%endblock%}
+
+{%block scripts %}
+
+<script>
+    async function loadDropdown() {
+        try {
+            const response = await fetch('/models_drop_down');
+            if (response.ok) {
+                const dropdownHTML = await response.text();
+                document.getElementById('data-file').innerHTML = dropdownHTML;
+            } else {
+                console.error('Failed to load dropdown:', response.statusText);
+                document.getElementById('data-file').textContent = 'Failed to load dropdown.';
+            }
+        } catch (error) {
+            console.error('Error fetching dropdown:', error);
+            document.getElementById('data-file').textContent = 'Error loading dropdown.';
+        }
+    }
+
+    // Call loadDropdown when the page has finished loading
+    document.addEventListener('DOMContentLoaded', loadDropdown);
+
+    // Add event listener to the form for submit event
+    document.getElementById('image-form').addEventListener('submit', handleSubmit);
+
+    var lat_min = 40;
+    var lat_max = 49;
+    var lat_avg = (lat_min + lat_max) / 2.0
+    var lon_min = -124.8;
+    var lon_max = -120;
+    var lon_avg = (lon_min + lon_max) / 2.0
+    var current_units;
+
+
+    function selectOptionByText(optionText) {
+        // Get the select element by its name attribute
+        var selectElement = document.getElementById('data-file');
+        // Iterate through the options
+        for (var i = 0; i < selectElement.options.length; i++) {
+            if (selectElement.options[i].text === optionText) {
+                // Set the selected property of the matching option to true
+                selectElement.options[i].selected = true;
+                const filename = selectElement.value
+                const regex = /.nc/i;
+                var jsonFlename = filename.replace(regex, '.json')
+                updateFormVariablesList('../static/json/' + jsonFlename)
+                // Trigger the change event
+                //selectElement.dispatchEvent(new Event('change'));
+                break;
+            }
+        }
+    }
+
+    function copyFormValues() {
+        const iframe = document.getElementById('3dIframe');
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+
+        // Read values from the iframe form
+        const sel = iframeDoc.getElementById('data-file')
+        const selection = sel.options[sel.selectedIndex].text
+        selectOptionByText(selection)
+        document.getElementById('start-lng').value = iframeDoc.getElementById('minLonSlider').value;
+        document.getElementById('end-lng').value = iframeDoc.getElementById('maxLonSlider').value;
+        document.getElementById('start-lat').value = iframeDoc.getElementById('minLatSlider').value;
+        document.getElementById('end-lat').value = iframeDoc.getElementById('maxLatSlider').value;
+        document.getElementById('start-depth').value = iframeDoc.getElementById('minDepthSlider').value;
+        document.getElementById('end-depth').value = iframeDoc.getElementById('maxDepthSlider').value;
+
+    }
+
+
+    // Set initial interpolation method
+    //document.getElementById('interpolation-method').value = "none";
+
+
+
+
+    // Add event listener to the form for submit event
+    //document.getElementById('image-form').addEventListener('submit', handleSubmit);
+    // Assuming leftMarker and rightMarker are your Leaflet marker objects
+    // and polyline is your Leaflet polyline object
+
+    function isValidLatitude(lat) {
+        return !isNaN(lat) && lat >= -90 && lat <= 90;
+    }
+
+    function isValidLongitude(lng) {
+        return !isNaN(lng) && lng >= -180 && lng <= 180;
+    }
+
+
+    function updateFormFields(fileName) {
+        const locked = document.getElementById('lock').checked;
+        var vertical_units;
+        const requestUrlDiv = document.getElementById('requestUrl');
+        requestUrlDiv.style.display = 'none';
+
+        fetch(fileName)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Assuming the JSON structure matches your form fields' ids
+                for (const [key, value] of Object.entries(data)) {
+                    if (key == "geospatial_lon_min") {
+                        if (!locked) document.getElementById('start-lng').value = value;
+                        lon_min = parseFloat(value);
+                    }
+                    else if (key == "geospatial_lon_max") {
+                        if (!locked) document.getElementById('end-lng').value = value;
+                        lon_max = parseFloat(value);
+                    }
+                    else if (key == "geospatial_lat_min") {
+                        if (!locked) document.getElementById('start-lat').value = value;
+                        lat_min = parseFloat(value);
+                    }
+                    else if (key == "geospatial_vertical_units") {
+                        vertical_units = value;
+                    }
+                    else if (key == "geospatial_lat_max") {
+                        if (!locked) document.getElementById('end-lat').value = value;
+                        lat_max = parseFloat(value);
+                    }
+                    else if (key == "geospatial_vertical_min") {
+                        if (!locked) document.getElementById('start-depth').value = parseFloat(value);
+                    }
+                    else if (key == "geospatial_vertical_max") {
+                        if (!locked) document.getElementById('end-depth').value = parseFloat(value);
+                    }
+
+
+                    else if (key == "data_vars") {
+
+                        // Find the select element
+                        var selectElement = document.getElementById('variables');
+                        // Populate the select element with options
+                        selectElement.options.length = 0;
+                        value.forEach((val, index) => {
+                            const option = new Option(val, val);
+                            selectElement.add(option);
+
+                            if (index === 0) {
+                                option.selected = true; // Select the first option
+                                document.getElementById("variables_hidden").value = val
+                            }
+                        });
+                    }
+
+                }
+                // Adjust the depth based on units.
+                /*
+                if (!locked) {
+
+                    if (document.getElementById('units').value == "cgs") {
+
+                        if (vertical_units == "km") {
+                            document.getElementById('start-depth').value = 1000 * parseFloat(document.getElementById('start-depth').value);
+                            //document.getElementById('units').value = "mks"
+                        }
+                    }
+                    else {
+                        if (vertical_units == "m") {
+                            document.getElementById('start-depth').value = parseFloat(document.getElementById('start-depth').value) / 1000;
+
+                            //document.getElementById('units').value = "cgs"
+                        }
+                    }
+                }
+
+*/
+
+            })
+            .catch(error => console.error('Error fetching the JSON file:', error));
+    }
+
+    function updateFormVariablesList(fileName) {
+        const locked = document.getElementById('lock').checked;
+        var vertical_units;
+        const requestUrlDiv = document.getElementById('requestUrl');
+        requestUrlDiv.style.display = 'none';
+
+        fetch(fileName)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Assuming the JSON structure matches your form fields' ids
+                for (const [key, value] of Object.entries(data)) {
+                    if (key == "data_vars") {
+
+                        // Find the select element
+                        var selectElement = document.getElementById('variables');
+                        // Populate the select element with options
+                        selectElement.options.length = 0;
+                        value.forEach((val, index) => {
+                            const option = new Option(val, val);
+                            selectElement.add(option);
+
+                            if (index === 0) {
+                                option.selected = true; // Select the first option
+                                document.getElementById("variables_hidden").value = val
+                            }
+                        });
+                    }
+
+                }
+
+
+
+            })
+            .catch(error => console.error('Error fetching the JSON file:', error));
+    }
+
+    /*
+    // Event listener for when the element gains focus
+    document.getElementById('units').onfocus = function () {
+        // Store the current value when the element is focused
+        current_units = document.getElementById('units').value;
+    };
+
+    document.getElementById('units').addEventListener('change', function () {
+        const requestUrlDiv = document.getElementById('requestUrl');
+        requestUrlDiv.style.display = 'none';
+        // Adjust the depth based on units.
+        const new_units = document.getElementById('units').value;
+        if (new_units == "cgs") {
+
+            if (current_units == "mks") {
+                current_units = "cgs"
+                document.getElementById('start-depth').value = 1000 * parseFloat(document.getElementById('start-depth').value);
+            }
+        }
+        else {
+            if (current_units == "cgs") {
+                current_units = "mks"
+                document.getElementById('start-depth').value = parseFloat(document.getElementById('start-depth').value) / 1000;
+            }
+        }
+
+    });
+*/
+    document.getElementById('data-file').addEventListener('change', function () {
+        const requestUrlDiv = document.getElementById('requestUrl');
+        requestUrlDiv.style.display = 'none';
+        const filename = document.getElementById('data-file').value
+        const regex = /.nc/i;
+        var jsonFlename = filename.replace(regex, '.json')
+        // Field is found, execute your function
+        jsonFlename = '../static/json/' + jsonFlename;
+        updateFormFields(jsonFlename)
+        // You can replace the console.log with any code to handle the change
+    });
+
+    document.getElementById('variables').addEventListener('change', function () {
+        const requestUrlDiv = document.getElementById('requestUrl');
+        requestUrlDiv.style.display = 'none';
+        var selectElement = document.getElementById('variables');
+
+        var selectedOptions = document.getElementById("variables").selectedOptions;
+        var selectedValues = Array.from(selectedOptions).map(option => option.value);
+
+        // Join the selected values into a comma-separated string
+        var variablesString = selectedValues.join(",");
+
+        // Set the value of the hidden input field
+        document.getElementById("variables_hidden").value = variablesString;
+
+
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Define the function to execute when mutations are observed
+        const callback = function (mutationsList, observer) {
+            for (const mutation of mutationsList) {
+                if (mutation.type === 'childList') {
+                    const dynamicField = document.getElementById('data-file');
+
+                    if (dynamicField.value) {
+                        const regex = /.nc/i;
+                        const jsonFlename = dynamicField.value.replace(regex, '.json')
+                        // Field is found, execute your function
+                        updateFormFields('../static/json/' + jsonFlename);
+
+                        // Optionally, disconnect the observer if it's no longer needed
+                        observer.disconnect();
+                        break;
+                    }
+                }
+            }
+        };
+
+        // Create an instance of MutationObserver with the callback
+        const observer = new MutationObserver(callback);
+
+        // Options for the observer (which mutations to observe)
+        const config = { childList: true, subtree: true };
+
+        // Start observing the document body for DOM changes
+        observer.observe(document.body, config);
+    });
+
+    // Function to handle form submission
+    document.getElementById('image-form').addEventListener('submit', handleSubmit);
+
+    function handleSubmit(event) {
+        event.preventDefault(); // Prevent the default form submission
+
+        const loadingElement = document.getElementById('dataLoadingMessage');
+        loadingElement.style.display = 'block'; // Show the loading message
+
+        const form = event.target;
+        const url = new URL(form.action);
+        const formData = new FormData(form);
+
+        // Convert form data to URL query parameters
+        formData.forEach((value, key) => {
+            url.searchParams.append(key, value);
+        });
+
+        const requestUrl = `${url}`;
+
+        const requestUrlDiv = document.getElementById('requestUrl');
+        requestUrlDiv.style.display = 'block';
+        const maxChar = 100;
+        const truncatedText = requestUrl.length > maxChar ? requestUrl.substring(0, maxChar) + '...' : requestUrl;
+
+        requestUrlDiv.innerHTML = `<a href="${requestUrl}" target="_blank">${truncatedText}</a>`;
+
+        fetch(url, {
+            method: 'GET'
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const disposition = response.headers.get('Content-Disposition');
+                const contentType = response.headers.get('Content-Type');
+                let filename = 'downloaded_file';
+
+                if (disposition && disposition.indexOf('attachment') !== -1) {
+                    // Try multiple patterns to extract filename
+                    const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
+                    if (matches != null && matches[1]) {
+                        filename = matches[1].replace(/['"]/g, ''); // Remove quotes if any
+                    }
+                } else {
+                    // Fallback: derive filename from Content-Type
+                    const extension = mimeToExtension(contentType);
+                    filename += extension ? `.${extension}` : '';
+                }
+
+                return response.blob().then(blob => ({ blob, filename }));
+            })
+            .then(({ blob, filename }) => {
+                loadingElement.style.display = 'none'; // Hide the loading message
+
+                // Create a link element to trigger the download
+                const link = document.createElement('a');
+                const url = window.URL.createObjectURL(blob);
+                link.href = url;
+                link.download = filename; // Use the extracted filename
+                document.body.appendChild(link);
+                link.click();
+                setTimeout(() => {
+                    document.body.removeChild(link);
+                    window.URL.revokeObjectURL(url);
+                }, 0);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                loadingElement.style.display = 'none'; // Hide the loading message in case of error
+            });
+    }
+
+    function mimeToExtension(mimeType) {
+        const mimeTypes = {
+            'text/csv': 'csv',
+            'application/json': 'json',
+            'application/vnd.ms-excel': 'xls',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
+            'application/netcdf': 'nc',
+            'application/geo+csv': 'geocsv',
+            // Add more mappings as needed
+        };
+
+        return mimeTypes[mimeType] || '';
+    }
+
+</script>
+
+{%endblock%}

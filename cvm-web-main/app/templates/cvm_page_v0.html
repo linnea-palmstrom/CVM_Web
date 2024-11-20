@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CVM Web</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="/static/css/cvm.css" />
+    {% block style %}{% endblock%}
+
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="top-banner">
+            <div class="logo-container">
+                <div class="logo">
+                    <img src="/static/images/CrescentLogosHorizontalWhite.png" alt="Logo" width="100">
+                </div>
+                <div class="company-name">Community Velocity Model (CVM)</div>
+            </div>
+
+            <ul class="menu-items">
+                <li class="nav-item active">
+                    <a class="nav-link" selected href="/">Repository</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/vis/x-section">Cross-Section</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/vis/depth-slice">Depth-Slice</a>
+                </li>
+                <li class="nav-item ">
+                    <a class="nav-link" href="/data">Data</a>
+                </li>
+            </ul>
+        </div>
+        <div class="description">
+            {% block description %}{% endblock%}
+        </div>
+        {% block leftpanel%}{% endblock%}
+        {% block rightpanel%}{% endblock%}
+        <div class="footer">
+            <ul class="menu-items">
+                <li class="nav-item ">
+                    <a class="nav-link" href="guide">User Guide</a>
+                </li>
+                <li class="nav-item ">
+                    <a class="nav-link" href="disclaimer">Disclaimer</a>
+                </li>
+                <li class="nav-item ">
+                    <a class="nav-link" href="contact">Contact</a>
+                </li>
+            </ul>
+        </div>
+        {%block scripts%} {%endblock%}
+
+    </div>
+    <script>
+        window.addEventListener('load', function () {
+            // Get the current page URL
+            var currentPageUrl = window.location.href;
+
+            // Get all links with the class 'nav-link' in the document
+            var links = document.querySelectorAll('a.nav-link');
+            // Loop through all links
+            for (var i = 0; i < links.length; i++) {
+                // Check if the link's href matches the current page URL
+                if (links[i].href === currentPageUrl) {
+                    // If a match is found, add a style to underline the link
+                    links[i].style.textDecoration = 'underline';
+                    links[i].style.fontWeight = 'bold';
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
