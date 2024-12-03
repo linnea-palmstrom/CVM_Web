@@ -1253,12 +1253,6 @@
                 console.log("Box entity top image:", textureImg);
                 
                 var fetchedImg;
-                Cesium.Resource.fetchImage({url: textureImg}).then(function(image) {
-                console.log("Fetched image", image);
-                //return new Promise((resolve) => { setTimeout(() => resolve(image), 500); // 500ms delay });
-                new Promise((resolve) => { setTimeout(() => resolve(image), 500); });
-                
-                //topMaterial = await new Cesium.Material({
                 topMaterial = new Cesium.Material({
                   fabric : {
                       //type : 'Image',
@@ -1266,7 +1260,7 @@
                       type : 'MyCustomMap',
                       uniforms : {
                           //image : textureImg,
-                          image : image,
+                          image : '',
                           //alphaSlider : alphaSliderTest.value
                           color : new Cesium.Color(1.0, 0.0, 0.0, alphaSliderTest.value)
                           //transparent: true
@@ -1278,9 +1272,9 @@
                     },
                     translucent: true
                 });
-                });
-                Cesium.RequestScheduler.requestTimeout = 1000;
-                
+                if (boxEntityTop) {
+                    //boxEntityTop.show = false; // Hide the primitive temporarily
+                }
                 boxEntityTop = viewer.scene.primitives.add(new Cesium.Primitive({
                     geometryInstances: myInstance,
 
@@ -1292,6 +1286,24 @@
                     }),
                     asynchronous: false,
                 }));
+                if (boxEntityTop) {
+                    boxEntityTop.show = false; // Hide the primitive temporarily
+                }
+                viewer.allowDataSourcesToSuspendAnimation = true;
+                new Promise((resolve, reject) => {
+                Cesium.Resource.fetchImage({url: textureImg}).then((image) => {
+                    console.log("Fetched image", image);
+                    topMaterial.uniforms.image = image;
+                    viewer.scene.requestRender();
+                    // Show the primitive again after it's fully updated
+                    boxEntityTop.show = true;
+                    resolve('Texture loaded and applied');
+                })
+                .catch((error) => {
+                    console.error('Error loading texture:', error);
+                    reject(error); // Propagate error if loading fails
+                });
+                });
             } catch (error) {
                 // Handle errors
                 console.log(`There was an error while creating the top slice primitive. ${error}`);
