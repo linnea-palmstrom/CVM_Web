@@ -658,27 +658,6 @@
         // Call loadDropdown when the page has finished loading
         document.addEventListener('DOMContentLoaded', loadDropdown);
 
-        /*
-        function getImageName(stem, depth, minDepth, maxDepth, numImages) {
-            console.log("Here",numImages);
-	    var depthDiff = depth - minDepth;
-            var depthRange = (maxDepth - minDepth) + 1;
-            
-            var depthImgsStep = (depthRange * 1.0)/numImages;
-            if (depthImgsStep == 0) {
-                depthImgsStep = 1;
-            }
-            var depthImgsIndx = Math.trunc(depthDiff/depthImgsStep);
-        
-            if (depthImgsIndx < 0) {
-                depthImgsIndx = 0;
-            }
-            if (depthImgsIndx > numImages) {
-                depthImgsIndx = numImages - 1;
-            }
-            return stem.concat(depthImgsIndx, ".png");
-        }
-        */
 
        /* 
 
@@ -713,11 +692,9 @@
             var latDirName = '';
             var latImgStem = '';
             response= await fetch(jsonFile);
-            console.log("Fetch");
             data = await response.json();
             // Assuming the JSON structure matches your form fields' ids
             for (const [key, value] of Object.entries(data)) {
-                //console.log(key,value)
                 if (key === "num_images") {
                     numImgs = value;
                 }
@@ -733,9 +710,6 @@
                 if (key === "lon_axis_dir_name") {
                     lonDirName = value;
                 }
-                //if (key === "lon_axis_img_stem") {
-                    //lonImgStem = value;
-                //}
                 if (key === "lat_axis_num_images") {
                     latNumImgs = value;
                 }
@@ -745,9 +719,7 @@
                 if (key === "lat_axis_img_stem") {
                     latImgStem = value;
                 }
-                //console.log(jsonVal,value, key===jsonKey)
             }
-            console.log("Json Dir", dirName);
 
             // Coordinates for the four corners.
             var positions = Cesium.Cartesian3.fromDegreesArrayHeights([
@@ -756,14 +728,6 @@
                 maxLon, maxLat, minDepth * -1000,
                 minLon, maxLat, minDepth * -1000,
             ]);
-            //console.log("TOP POSITIONS:", positions);
-            //console.log("MIN LON:", minLon);
-            //console.log("MIN LAT:", minLat);
-            //console.log("MIN DEPTH:", minDepth);
-            //console.log("MAX LON:", maxLon);
-            //console.log("MAX LAT:", maxLat);
-            //console.log("MAX DEPTH:", maxDepth);
-            //console.log("ALPHA:", alpha);
 
             // Coordinates for the four corners for the bottom side of the bounding box.
             var positionsBot = Cesium.Cartesian3.fromDegreesArrayHeights([
@@ -772,35 +736,8 @@
                 maxLon, maxLat, maxDepth * -1000,
                 minLon, maxLat, maxDepth * -1000,
             ]);
-            //console.log("BOTTOM POSITIONS:", positionsBot);
-            //console.log("MIN LON:", minLon);
-            //console.log("MIN LAT:", minLat);
-            //console.log("MIN DEPTH:", minDepth);
-            //console.log("MAX LON:", maxLon);
-            //console.log("MAX LAT:", maxLat);
-            //console.log("MAX DEPTH:", maxDepth);
-            //console.log("ALPHA:", alpha);
 
             // Coordinates for the four corners for the edge 1 of the bounding box.
-            //var positionsEdge1 = Cesium.Cartesian3.fromDegreesArrayHeights([
-                //maxDepth * -1000, minLat, minLon,  // Longitude, Latitude, Height
-                //minDepth * -1000, minLat, maxLon,
-                //minDepth * -1000, maxLat, maxLon,
-                //maxDepth * -1000, maxLat, minLon,
-            //]);
-            // Coordinates for the four corners for the edge 1 of the bounding box.
-            //var positionsEdge1 = Cesium.Cartesian3.fromDegreesArrayHeights([
-                //minDepth * -1000, maxLat, maxLon,  // Longitude, Latitude, Height
-                //maxDepth * -1000, maxLat, maxLon,
-                //maxDepth * -1000, minLat, maxLon,
-                //minDepth * -1000, minLat, maxLon,
-            //]);
-            //var positionsEdge1 = Cesium.Cartesian3.fromDegreesArrayHeights([
-                //minLon, minLat, maxDepth * -1000,  // Longitude, Latitude, Height
-                //minLon, minLat, minDepth * -1000,
-                //minLon, maxLat, minDepth * -1000,
-                //minLon, maxLat, maxDepth * -1000,
-            //]);
             var positionsEdge1 = Cesium.Cartesian3.fromDegreesArrayHeights([
                 minLon, minLat, minDepth * -1000,  // Longitude, Latitude, Height
                 minLon, minLat, maxDepth * -1000,
@@ -848,16 +785,6 @@
                 viewer.scene.primitives.remove(boxEntityEdge4);
             }
 
-            /*
-            var primitives = viewer.scene.primitives;
-            const length = primitives.length;
-            for (var i = 0; i < length; i++) {
-                var id = primitives.get(i).id;
-                if (id != 'boxEntity') {
-                    primitives.remove(primitives.get(i));
-                }
-            }
-            */
 
             const minDepthSliderTest = document.getElementById('minDepthSlider');
             const maxDepthSliderTest = document.getElementById('maxDepthSlider');
@@ -871,8 +798,6 @@
             // it so the image at depth 62 km shows up for any depths greater than
             // 62 and the image at depth 0 show up for any depths less than 0
             
-            //var minDepthTest = 0;
-            //var maxDepthTest = 62;
             var minDepthTest = minDepthSliderTest.min;
             var maxDepthTest = minDepthSliderTest.max;
             var minLonTest = minLonSliderTest.min;
@@ -883,26 +808,8 @@
             var depthDiff = minDepthSliderTest.value - minDepthTest;
             var depthRange = (maxDepthTest - minDepthTest) + 1;
 
-            //var depthImgs = [];
-	    
-            // Hard coding these variables for now to test my function
-            //var numImgs = 63;
-            //var jsonFile = '../static/json/Cascadia-ANT+RF-Delph2018-image-parameters.json';
-            //var jsonFile = '../static/json/LP3.json';
-            //var numImgs= await getJsonVal(jsonFile, "num_images");
-	    console.log("HERE",numImgs);
-	    console.log("THERE",dirName);
-	    console.log("EVERYWHERE",imgStem);
-            //var stem = "/static/images/Cascadia_vs_slice_screenshots_zoomed_in/Cascadia_vs_slice-";
-            //var dirName = "/static/images/Cascadia_vs_slice_screenshots_zoomed_in/";
-            //var stem = "Cascadia_vs_slice-";
-
-            //const fs = require('fs');
-            //const numImgs = fs.readdirSync(dirName).length;
-
             
             function getImageName(stem, depth, minDepth, maxDepth, numImages) {
-                console.log("Here",numImages);
 	        var depthDiff = depth - minDepth;
                 var depthRange = (maxDepth - minDepth) + 1;
             
@@ -921,7 +828,6 @@
                 return stem.concat(depthImgsIndx, ".png");
             }
             function getLonImageName(stem, lon, minLon, maxLon, numImages) {
-                console.log("Here",numImages);
 	        var lonDiff = minLon - lon; // the lon values go from 0 to -36
                 var lonRange = (maxLon - minLon);
             
@@ -941,7 +847,6 @@
                 return stem.concat(lonImgsIndx, ".png");
             }
             function getLatImageName(stem, lat, minLat, maxLat, numImages) {
-                console.log("Here",numImages);
 	        var latDiff = -(maxLat - lat); // the lat values go from 0 to -55
                 var latRange = (maxLat - minLat);
             
@@ -961,62 +866,19 @@
                 return stem.concat(latImgsIndx, ".png");
             }
 
-            //for (var i = 0; i < numImgs; ++i) {
-                //depthImgs.push(getImageName(stem, minDepthSliderTest.value, minDepthTest, maxDepthTest, numImgs));
-            //}
-            //var textureImg = dirName.concat(getImageName(stem, minDepthSliderTest.value, minDepthTest, maxDepthTest, numImgs));
             var textureImg = dirName.concat(getImageName(imgStem, minDepthSliderTest.value, minDepthTest, maxDepthTest, numImgs));
-            //var textureImg = "/static/images/Cascadia_vs_slice_screenshots_zoomed_in/Cascadia_vs_slice-21";
-            //var textureImg = "/static/images/Cascadia_vs_slice_screenshots_zoomed_in/Cascadia_vs_slice-71";
-            //depthImgs.push(textureImg);
             
             var textureImgBot = dirName.concat(getImageName(imgStem, maxDepthSliderTest.value, minDepthTest, maxDepthTest, numImgs));
 	    console.log("IMAGE TOP",textureImg);
-	    console.log("IMAGE BOTTOM",textureImgBot);
             var textureImgEdge1 = lonDirName.concat(getLonImageName(imgStem, minLonSliderTest.value, minLonTest, maxLonTest, lonNumImgs));
-	    console.log("IMAGE EDGE 1",textureImgEdge1);
             var textureImgEdge2 = lonDirName.concat(getLonImageName(imgStem, maxLonSliderTest.value, minLonTest, maxLonTest, lonNumImgs));
             var textureImgEdge3 = latDirName.concat(getLonImageName(latImgStem, minLatSliderTest.value, minLatTest, maxLatTest, latNumImgs));
             var textureImgEdge3 = latDirName.concat(getLatImageName(latImgStem, minLatSliderTest.value, minLatTest, maxLatTest, latNumImgs));
-	    console.log("IMAGE EDGE 3",textureImgEdge3);
             var textureImgEdge4 = latDirName.concat(getLatImageName(latImgStem, maxLatSliderTest.value, minLatTest, maxLatTest, latNumImgs));
-            /*
-            var listLen = depthImgs.length;
-            var depthImgsStep = depthRange/listLen;
-            if (depthImgsStep == 0) {
-                depthImgsStep = 1;
-            }
-            var depthImgsIndx = Math.trunc(depthDiff/depthImgsStep);
-            */
 
-            /*
-            if (minDepthSliderTest.value > 62) {
-                var textureImg = "/static/images/Hummingbird.png";
-            } else if (minDepthSliderTest.value < 0) {
-                var textureImg = "/static/images/Hummingbird2.png";
-            } else {
-                //var textureImg = "/static/images/Cascadia_vs_slice_screenshots/".concat(depthImgs[depthImgsIndx]);
-                var textureImg = "/static/images/Cascadia_vs_slice_screenshots_zoomed_in/".concat(depthImgs[depthImgsIndx]);
-            }
-            */
 
-            //var textureImg = "/static/images/Cascadia_vs_slice_screenshots_zoomed_in/Cascadia_vs_slice-".concat(depthImgs[depthImgsIndx]);
-
-            //const minLonSliderTest = document.getElementById('minLonSlider');
-            //const maxLonSliderTest = document.getElementById('maxLonSlider');
-            //const minLatSliderTest = document.getElementById('minLatSlider');
-            //const maxLatSliderTest = document.getElementById('maxLatSlider');
-            //var x_ratio = (maxLon - minLonSliderTest.min)/(maxLonSliderTest.max - minLonSliderTest.min);
-            //var x_ratio = (maxLon - (-124.8))/(-120 - (-124.8));
-            //var x_ratio = (-120 - (minLon))/(-120 - (-124.8));
-            //var y_ratio = (maxLat - 40)/(49 - 40);
-            //var y_ratio = (maxLat - minLatSliderTest.min)/(maxLatSliderTest.max - minLatSliderTest.min);
-            //var y_ratio = ((49 - minLat)/(49 - 40));
             var y_ratio = ((49 - minLat)/(49 - 40));
 
-
-            //var uvs = new Float32Array([0, 0, 1, 0, 1, 1, 0, 1]);
-                
 
             var numPositions = 4;
             var pos = new Float64Array(numPositions * 3);
@@ -1061,22 +923,13 @@
             var max_x_ratio = (maxLon - maxLonSliderTest.min)/(maxLonSliderTest.max - minLonSliderTest.min);
             var min_y_ratio = (minLat - minLatSliderTest.min)/(maxLatSliderTest.max - minLatSliderTest.min);
             var max_y_ratio = (maxLat - maxLatSliderTest.min)/(maxLatSliderTest.max - minLatSliderTest.min);
-            //var uvs = [min_x_ratio, min_y_ratio, 0.9, 0.1, max_x_ratio, 0.6, 0.1, max_y_ratio];
             var uvs = [min_x_ratio, min_y_ratio, max_x_ratio, min_y_ratio, max_x_ratio, max_y_ratio, min_x_ratio, max_y_ratio];
             var indexs = new Uint16Array([0, 1, 2, 2, 3, 0]);
             var min_z_ratio = (minDepth - minDepthSliderTest.min)/(maxDepthSliderTest.max - minDepthSliderTest.min);
             var max_z_ratio = (maxDepth - maxDepthSliderTest.min)/(maxDepthSliderTest.max - minDepthSliderTest.min);
             var uvsEdge1 = [min_z_ratio, min_y_ratio, max_z_ratio, min_y_ratio, max_z_ratio, max_y_ratio, min_z_ratio, max_y_ratio];
-            //var uvsEdge1 = [max_z_ratio, max_y_ratio, min_z_ratio, max_y_ratio, min_z_ratio, min_y_ratio, max_z_ratio, min_y_ratio];
-            //var uvsEdge1 = [max_z_ratio, min_y_ratio, min_z_ratio, min_y_ratio, min_z_ratio, max_y_ratio, max_z_ratio, max_y_ratio];
-            //var uvsEdge3 = [min_x_ratio, min_z_ratio, max_x_ratio, min_z_ratio, max_x_ratio, max_z_ratio, min_x_ratio, max_z_ratio];
 
             var uvsEdge3 = [min_z_ratio, min_x_ratio, max_z_ratio, min_x_ratio, max_z_ratio, max_x_ratio, min_z_ratio, max_x_ratio];
-            //var uvsEdge3 = [max_z_ratio, min_x_ratio, min_z_ratio, min_x_ratio, min_z_ratio, max_x_ratio, max_z_ratio, max_x_ratio];
-            //var uvsEdge3 = [max_z_ratio, max_x_ratio, min_z_ratio, max_x_ratio, min_z_ratio, min_x_ratio, max_z_ratio, min_x_ratio];
-            //var uvsEdge3 = [max_z_ratio, min_x_ratio, min_z_ratio, max_x_ratio, min_z_ratio, min_x_ratio,  max_z_ratio, max_x_ratio];
-            //var uvsEdge3 = [min_z_ratio, max_x_ratio, max_z_ratio, min_x_ratio, min_z_ratio, min_x_ratio,  max_z_ratio, max_x_ratio];
-            //var uvsEdge3 = [min_z_ratio, max_x_ratio, max_z_ratio, min_x_ratio, max_z_ratio, max_x_ratio, min_z_ratio, min_x_ratio];
             
             var geometry = new Cesium.Geometry({
               attributes: {
@@ -1223,30 +1076,6 @@
                     color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
                 }
             });
-            /*
-            var myEmissionMat =  new Cesium.Material({
-                fabric : {
-                    //type : 'Image',
-                    type : 'EmissionMap',
-                    uniforms : {
-                        image : textureImg,
-                        transparent: true
-                    }
-                },
-                translucent: true
-            });
-            var myAlphaMat =  new Cesium.Material({
-                fabric : {
-                    //type : 'Image',
-                    type : 'AlphaMap',
-                    uniforms : {
-                        image : textureImg,
-                        transparent: true
-                    }
-                },
-                translucent: true
-            });
-            */
             const alphaSliderTest = document.getElementById('alphaSlider');
             
             try {
@@ -1255,8 +1084,6 @@
                 var fetchedImg;
                 topMaterial = new Cesium.Material({
                   fabric : {
-                      //type : 'Image',
-                      //type : 'EmissionMap',
                       type : 'MyCustomMap',
                       uniforms : {
                           //image : textureImg,
@@ -1427,36 +1254,8 @@
                     console.error("Failed to load the image:", error);
                 });
             */
-            /*
-            boxEntityTop = viewer.scene.primitives.add(new Cesium.Primitive({
-                geometryInstances: myInstance,
 
-                id: 'boxEntity',
 
-                appearance: new Cesium.MaterialAppearance({
-                    material : new Cesium.Material({
-                      fabric : {
-                          //type : 'Image',
-                          //type : 'EmissionMap',
-                          type : 'MyCustomMap',
-                          uniforms : {
-                              image : fetchedImg,
-                              //alphaSlider : alphaSliderTest.value
-                              color : new Cesium.Color(1.0, 0.0, 0.0, alphaSliderTest.value)
-                              //transparent: true
-                          },
-                          components : {
-                              emission : 'texture(image, materialInput.st).rgb',
-                              alpha : 'texture(image, materialInput.st).a * color.a'
-                          }
-                        },
-                        translucent: true
-                    }),
-                    //faceForward: true
-                }),
-                asynchronous: false,
-            }));
-            */
             /* 
             boxEntityTop = viewer.scene.primitives.add(new Cesium.Primitive({
                 geometryInstances: myInstance,
@@ -1470,7 +1269,8 @@
                           //type : 'EmissionMap',
                           type : 'MyCustomMap',
                           uniforms : {
-                              image : textureImg,
+                              image : fetchedImg,
+                              //image : textureImg,
                               //alphaSlider : alphaSliderTest.value
                               color : new Cesium.Color(1.0, 0.0, 0.0, alphaSliderTest.value)
                               //transparent: true
@@ -1487,8 +1287,6 @@
                 asynchronous: false,
             }));
             
-            //primitive.allowPicking = false;
-            //primitive.depthTestAgainstTerrain = false;
             
             boxEntityBottom = viewer.scene.primitives.add(new Cesium.Primitive({
                 geometryInstances: myInstanceBot,
@@ -1616,13 +1414,9 @@
             }));
             */
 
-            //primitive.allowPicking = false;
-            //primitive.depthTestAgainstTerrain = false;
             viewer.scene.globe.depthTestAgainstTerrain = false;
             viewer.scene.globe.allowPicking = false;
             
-
-            console.log("BOTTOM POSITIONS AFTER ADDING PRIMITIVE:", positionsBot);
 
         }
 
@@ -1667,39 +1461,30 @@
                 maxDepthSlider.value = parseFloat(limits[5]);
                 document.getElementById('maxDepthValue').textContent = maxDepthSlider.value;
 	        
-                console.log("MAX DEPTH VAL:", maxDepthSlider.value);
 
                 updateBoxOutline(parseFloat(minLatSlider.value), parseFloat(maxLatSlider.value), parseFloat(minLonSlider.value), parseFloat(maxLonSlider.value), parseFloat(minDepthSlider.value), parseFloat(maxDepthSlider.value), parseFloat(document.getElementById('alphaSlider').value));
             } else {
                 if (boxEntityTop) {
-                    //viewer.entities.remove(boxEntityTop);
                     viewer.scene.primitives.remove(boxEntityTop);
                     boxEntityTop = null;
-	            console.log("DELETE TOP");
                 }
                 if (boxEntityBottom) {
-                    //viewer.entities.remove(boxEntityBottom);
                     viewer.scene.primitives.remove(boxEntityBottom);
                     boxEntityBottom = null;
-	            console.log("DELETE PRIMITIVE");
                 }
                 if (boxEntityEdge1) {
-                    //viewer.entities.remove(boxEntityEdge1);
                     viewer.scene.primitives.remove(boxEntityEdge1);
                     boxEntityEdge1 = null;
                 }
                 if (boxEntityEdge2) {
-                    //viewer.entities.remove(boxEntityEdge2);
                     viewer.scene.primitives.remove(boxEntityEdge2);
                     boxEntityEdge2 = null;
                 }
                 if (boxEntityEdge3) {
-                    //viewer.entities.remove(boxEntityEdge3);
                     viewer.scene.primitives.remove(boxEntityEdge3);
                     boxEntityEdge3 = null;
                 }
                 if (boxEntityEdge4) {
-                    //viewer.entities.remove(boxEntityEdge4);
                     viewer.scene.primitives.remove(boxEntityEdge4);
                     boxEntityEdge4 = null;
                 }
@@ -1735,12 +1520,10 @@
 
         document.getElementById('maxDepthSlider').addEventListener('input', function () {
             document.getElementById('maxDepthValue').textContent = this.value;
-	    console.log("MAX DEPTH THIS.VAL:", this.value);
             updateBoxOutline(parseFloat(document.getElementById('minLatSlider').value), parseFloat(document.getElementById('maxLatSlider').value), parseFloat(document.getElementById('minLonSlider').value), parseFloat(document.getElementById('maxLonSlider').value), parseFloat(document.getElementById('minDepthSlider').value), parseFloat(this.value), parseFloat(document.getElementById('alphaSlider').value));
         });
         document.getElementById('alphaSlider').addEventListener('input', function () {
             document.getElementById('alphaValue').textContent = this.value;
-	    console.log("ALPHA THIS.VAL:", this.value);
             //updateBoxOutline(parseFloat(document.getElementById('minLatSlider').value), parseFloat(document.getElementById('maxLatSlider').value), parseFloat(document.getElementById('minLonSlider').value), parseFloat(document.getElementById('maxLonSlider').value), parseFloat(document.getElementById('minDepthSlider').value), parseFloat(this.value), parseFloat(document.getElementById('alphaSlider').value));
             updateBoxOutline(parseFloat(document.getElementById('minLatSlider').value), parseFloat(document.getElementById('maxLatSlider').value), parseFloat(document.getElementById('minLonSlider').value), parseFloat(document.getElementById('maxLonSlider').value), parseFloat(document.getElementById('minDepthSlider').value), parseFloat(document.getElementById('maxDepthSlider').value), parseFloat(this.value));
         });
