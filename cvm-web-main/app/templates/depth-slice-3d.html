@@ -248,27 +248,7 @@
         </div>
     </div>
 
-    <!-- <div id="cesiumTexture"></div> -->
-    <!-- <script> -->
-        // Define the texture bounds
-        //var west = -124.8;
-        //var south = 40.0;
-        //var east = -120.0;
-        //var north = 49.0;
-
-        //var texture = viewer.entities.add({
-            //rectangle: {
-                //coordinates: Cesium.Rectangle.fromDegrees(west, south, east, north),
-                //material: new Cesium.ImageMaterialProperty({
-                    //image:,
-                    //transparent: true
-                //})
-            //}
-        //});
-
     <script>
-        // import the json file LP3.son
-        //import data from '../static/json/LP3.json' assert { type: 'json' };
 
         Cesium.Ion.defaultAccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJmZDQzMzIyOS1lZDFlLTRhNTgtYTE1Yy04YzNkNWQ2ZmI4OTIiLCJpZCI6MjAxODU5LCJpYXQiOjE3MTA0MDQ5MDd9._E6MFZMMjbxpzC4qYYROP1ldtV1MJn0f56W5woAtboc";
         const apiKey = "AAPKafd67a0544f04817b08c2f65379b76c8pz3w8RSH_npDJjf9phbqEJ2kbD8QnfX-lzVlJ7dUi_3pQjwWS-vNFeXT6jacicfJ";
@@ -659,25 +639,6 @@
         document.addEventListener('DOMContentLoaded', loadDropdown);
 
 
-       /* 
-
-        async function getJsonVal(fileName, jsonKey) {
-            var jsonVal;
-            response= await fetch(fileName)
-            data = await response.json()
-                    //console.log(Object.entries(data));
-                    // Assuming the JSON structure matches your form fields' ids
-                    for (const [key, value] of Object.entries(data)) {
-                        //console.log(key,value)
-			if (key === jsonKey) {
-                            jsonVal = value;
-                        }
-		        console.log(jsonVal,value, key===jsonKey)
-                    }
-		 return jsonVal
-        }
-        */
-        
 
         async function updateBoxOutline(minLat, maxLat, minLon, maxLon, minDepth, maxDepth, alpha) {
             // fetch the json file with the information about the group of slice images
@@ -793,11 +754,6 @@
             const minLatSliderTest = document.getElementById('minLatSlider');
             const maxLatSliderTest = document.getElementById('maxLatSlider');
             
-            // The depth slider goes from -3 to 80 km, but the data I downloaded
-            // only goes from 0 to 62 km in the slice view on ParaView, so I made
-            // it so the image at depth 62 km shows up for any depths greater than
-            // 62 and the image at depth 0 show up for any depths less than 0
-            
             var minDepthTest = minDepthSliderTest.min;
             var maxDepthTest = minDepthSliderTest.max;
             var minLonTest = minLonSliderTest.min;
@@ -836,7 +792,6 @@
                     lonImgsStep = 1;
                 }
                 var lonImgsIndx = Math.trunc(lonDiff/lonImgsStep);
-                console.log("There",lonImgsIndx);
         
                 if (lonImgsIndx > 0) {
                     lonImgsIndx = 0;
@@ -855,7 +810,6 @@
                     latImgsStep = 1;
                 }
                 var latImgsIndx = Math.trunc(latDiff/latImgsStep);
-                console.log("There",latImgsIndx);
         
                 if (latImgsIndx > 0) {
                     latImgsIndx = 0;
@@ -869,15 +823,11 @@
             var textureImg = dirName.concat(getImageName(imgStem, minDepthSliderTest.value, minDepthTest, maxDepthTest, numImgs));
             
             var textureImgBot = dirName.concat(getImageName(imgStem, maxDepthSliderTest.value, minDepthTest, maxDepthTest, numImgs));
-	    console.log("IMAGE TOP",textureImg);
             var textureImgEdge1 = lonDirName.concat(getLonImageName(imgStem, minLonSliderTest.value, minLonTest, maxLonTest, lonNumImgs));
             var textureImgEdge2 = lonDirName.concat(getLonImageName(imgStem, maxLonSliderTest.value, minLonTest, maxLonTest, lonNumImgs));
             var textureImgEdge3 = latDirName.concat(getLonImageName(latImgStem, minLatSliderTest.value, minLatTest, maxLatTest, latNumImgs));
             var textureImgEdge3 = latDirName.concat(getLatImageName(latImgStem, minLatSliderTest.value, minLatTest, maxLatTest, latNumImgs));
             var textureImgEdge4 = latDirName.concat(getLatImageName(latImgStem, maxLatSliderTest.value, minLatTest, maxLatTest, latNumImgs));
-
-
-            var y_ratio = ((49 - minLat)/(49 - 40));
 
 
             var numPositions = 4;
@@ -1076,21 +1026,16 @@
                     color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
                 }
             });
-            const alphaSliderTest = document.getElementById('alphaSlider');
+            const alphaSliderVal = document.getElementById('alphaSlider');
             
             try {
-                console.log("Box entity top image:", textureImg);
-                
                 var fetchedImg;
                 topMaterial = new Cesium.Material({
                   fabric : {
                       type : 'MyCustomMap',
                       uniforms : {
-                          //image : textureImg,
                           image : '',
-                          //alphaSlider : alphaSliderTest.value
-                          color : new Cesium.Color(1.0, 0.0, 0.0, alphaSliderTest.value)
-                          //transparent: true
+                          color : new Cesium.Color(1.0, 0.0, 0.0, alphaSliderVal.value)
                       },
                       components : {
                           emission : 'texture(image, materialInput.st).rgb',
@@ -1099,9 +1044,6 @@
                     },
                     translucent: true
                 });
-                if (boxEntityTop) {
-                    //boxEntityTop.show = false; // Hide the primitive temporarily
-                }
                 boxEntityTop = viewer.scene.primitives.add(new Cesium.Primitive({
                     geometryInstances: myInstance,
 
@@ -1109,7 +1051,6 @@
 
                     appearance: new Cesium.MaterialAppearance({
                         material : topMaterial,
-                        //faceForward: true
                     }),
                     asynchronous: false,
                 }));
@@ -1117,9 +1058,9 @@
                     boxEntityTop.show = false; // Hide the primitive temporarily
                 }
                 viewer.allowDataSourcesToSuspendAnimation = true;
+                // I tried to use a promise to try to force it to load the image before displaying it
                 new Promise((resolve, reject) => {
                 Cesium.Resource.fetchImage({url: textureImg}).then((image) => {
-                    console.log("Fetched image", image);
                     topMaterial.uniforms.image = image;
                     viewer.scene.requestRender();
                     // Show the primitive again after it's fully updated
@@ -1135,13 +1076,13 @@
                 // Handle errors
                 console.log(`There was an error while creating the top slice primitive. ${error}`);
             }
-            
+            // I tried to use Cesium.Resource.fetchImage before creating the boxEntityTop to see
+            // if that would load the image before it tried to render it.
             /*
             var fetchedImg;
             Cesium.Resource.fetchImage({url: textureImg}).then(function(image) {
                 //texture.copyFrom(image);
                 fetchedImg = image;
-                console.log('Fetched Image:', fetchedImg);
                 boxEntityTop = viewer.scene.primitives.add(new Cesium.Primitive({
                     geometryInstances: myInstance,
 
@@ -1150,14 +1091,10 @@
                     appearance: new Cesium.MaterialAppearance({
                         material : new Cesium.Material({
                           fabric : {
-                              //type : 'Image',
-                              //type : 'EmissionMap',
                               type : 'MyCustomMap',
                               uniforms : {
                                   image : fetchedImg,
-                                  //alphaSlider : alphaSliderTest.value
-                                  color : new Cesium.Color(1.0, 0.0, 0.0, alphaSliderTest.value)
-                                  //transparent: true
+                                  color : new Cesium.Color(1.0, 0.0, 0.0, alphaSliderVal.value)
                               },
                               components : {
                                   emission : 'texture(image, materialInput.st).rgb',
@@ -1166,15 +1103,15 @@
                             },
                             translucent: true
                         }),
-                        //faceForward: true
                     }),
                     asynchronous: false,
                 }));
             }).catch(function(error) {
                 console.log(`There was an error while creating the top slice primitive. ${error}`);
             });
-            //console.log('Fetched Image:', fetchedImg);
             */
+            // I tried to use Cesium.Resource.fetchImage before creating the material for the boxEntityTop to see
+            // if that would load the image before it tried to render it.
             /*
             // Use Cesium.Resource.fetchImage to load the image
             Cesium.Resource.fetchImage(textureImg)
@@ -1191,17 +1128,12 @@
                     });
                     */
                     /*
-                    console.log('Fetched Image:', loadedImage);
                     topMaterial = new Cesium.Material({
                         fabric : {
-                            //type : 'Image',
-                            //type : 'EmissionMap',
                             type : 'MyCustomMap',
                             uniforms : {
                                 image : loadedImage,
-                                //alphaSlider : alphaSliderTest.value
-                                color : new Cesium.Color(1.0, 0.0, 0.0, alphaSliderTest.value)
-                                //transparent: true
+                                color : new Cesium.Color(1.0, 0.0, 0.0, alphaSliderVal.value)
                             },
                             components : {
                                 emission : 'texture(image, materialInput.st).rgb',
@@ -1213,7 +1145,6 @@
 
                     if (boxEntityTop !== null) {
                         viewer.scene.primitives.remove(boxEntityTop);
-                        //console.log("boxEntityTop", boxEntityTop);
                         //boxEntityTop.appearance.material.uniforms.image = loadedImage;
                     } //else {
                     */
@@ -1239,7 +1170,6 @@
 
                         appearance: new Cesium.MaterialAppearance({
                             material : topMaterial,
-                            //faceForward: true
                         }),
                         asynchronous: false,
                     });
@@ -1255,7 +1185,11 @@
                 });
             */
 
-
+            // My original code to create the boxEntityTop before I was trying to fix the
+            // flickering issue. It also includes the code for creating all of the other
+            // sides of the bounding box, but I chose to only show the boxEntityTop right
+            // now while I have been working on this issue with the slice rendering before
+            // the image has loaded.
             /* 
             boxEntityTop = viewer.scene.primitives.add(new Cesium.Primitive({
                 geometryInstances: myInstance,
@@ -1265,15 +1199,10 @@
                 appearance: new Cesium.MaterialAppearance({
                     material : new Cesium.Material({
                       fabric : {
-                          //type : 'Image',
-                          //type : 'EmissionMap',
                           type : 'MyCustomMap',
                           uniforms : {
                               image : fetchedImg,
-                              //image : textureImg,
-                              //alphaSlider : alphaSliderTest.value
-                              color : new Cesium.Color(1.0, 0.0, 0.0, alphaSliderTest.value)
-                              //transparent: true
+                              color : new Cesium.Color(1.0, 0.0, 0.0, alphaSliderVal.value)
                           },
                           components : {
                               emission : 'texture(image, materialInput.st).rgb',
@@ -1282,7 +1211,6 @@
                         },
                         translucent: true
                     }),
-                    //faceForward: true
                 }),
                 asynchronous: false,
             }));
@@ -1299,7 +1227,7 @@
                           type : 'MyCustomMap2',
                           uniforms : {
                               image : textureImgBot,
-                              color : new Cesium.Color(1.0, 0.0, 0.0, alphaSliderTest.value)
+                              color : new Cesium.Color(1.0, 0.0, 0.0, alphaSliderVal.value)
                           },
                           components : {
                               emission : 'texture(image, materialInput.st).rgb',
@@ -1308,7 +1236,6 @@
                         },
                         translucent: true
                     }),
-                    //faceForward: true
                 }),
                 asynchronous: false,
             }));
@@ -1323,9 +1250,8 @@
                       fabric : {
                           type : 'MyCustomMap3',
                           uniforms : {
-                              //image : "/static/images/Hummingbird2.png",
                               image : textureImgEdge1,
-                              color : new Cesium.Color(1.0, 0.0, 0.0, alphaSliderTest.value)
+                              color : new Cesium.Color(1.0, 0.0, 0.0, alphaSliderVal.value)
                           },
                           components : {
                               emission : 'texture(image, materialInput.st).rgb',
@@ -1348,9 +1274,8 @@
                       fabric : {
                           type : 'MyCustomMap4',
                           uniforms : {
-                              //image : "/static/images/Hummingbird2.png",
                               image : textureImgEdge2,
-                              color : new Cesium.Color(1.0, 0.0, 0.0, alphaSliderTest.value)
+                              color : new Cesium.Color(1.0, 0.0, 0.0, alphaSliderVal.value)
                           },
                           components : {
                               emission : 'texture(image, materialInput.st).rgb',
@@ -1373,9 +1298,8 @@
                       fabric : {
                           type : 'MyCustomMap5',
                           uniforms : {
-                              //image : "/static/images/Hummingbird2.png",
                               image : textureImgEdge3,
-                              color : new Cesium.Color(1.0, 0.0, 0.0, alphaSliderTest.value)
+                              color : new Cesium.Color(1.0, 0.0, 0.0, alphaSliderVal.value)
                           },
                           components : {
                               emission : 'texture(image, materialInput.st).rgb',
@@ -1398,9 +1322,8 @@
                       fabric : {
                           type : 'MyCustomMap6',
                           uniforms : {
-                              //image : "/static/images/Hummingbird2.png",
                               image : textureImgEdge4,
-                              color : new Cesium.Color(1.0, 0.0, 0.0, alphaSliderTest.value)
+                              color : new Cesium.Color(1.0, 0.0, 0.0, alphaSliderVal.value)
                           },
                           components : {
                               emission : 'texture(image, materialInput.st).rgb',
@@ -1524,6 +1447,7 @@
         });
         document.getElementById('alphaSlider').addEventListener('input', function () {
             document.getElementById('alphaValue').textContent = this.value;
+            // This line has a bug in it and should instead look like the next line of code
             //updateBoxOutline(parseFloat(document.getElementById('minLatSlider').value), parseFloat(document.getElementById('maxLatSlider').value), parseFloat(document.getElementById('minLonSlider').value), parseFloat(document.getElementById('maxLonSlider').value), parseFloat(document.getElementById('minDepthSlider').value), parseFloat(this.value), parseFloat(document.getElementById('alphaSlider').value));
             updateBoxOutline(parseFloat(document.getElementById('minLatSlider').value), parseFloat(document.getElementById('maxLatSlider').value), parseFloat(document.getElementById('minLonSlider').value), parseFloat(document.getElementById('maxLonSlider').value), parseFloat(document.getElementById('minDepthSlider').value), parseFloat(document.getElementById('maxDepthSlider').value), parseFloat(this.value));
         });
