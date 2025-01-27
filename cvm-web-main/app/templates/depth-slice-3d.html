@@ -784,7 +784,7 @@
                 return stem.concat(depthImgsIndx, ".png");
             }
             function getLonImageName(stem, lon, minLon, maxLon, numImages) {
-	        var lonDiff = minLon - lon; // the lon values go from 0 to -36
+	        var lonDiff = lon - minLon;
                 var lonRange = (maxLon - minLon);
             
                 var lonImgsStep = (lonRange * 1.0)/numImages;
@@ -793,16 +793,16 @@
                 }
                 var lonImgsIndx = Math.trunc(lonDiff/lonImgsStep);
         
-                if (lonImgsIndx > 0) {
+                if (lonImgsIndx < 0) {
                     lonImgsIndx = 0;
                 }
-                if (-lonImgsIndx >= numImages) {
-                    lonImgsIndx = -(numImages - 1);
+                if (lonImgsIndx >= numImages) {
+                    lonImgsIndx = (numImages - 1);
                 }
                 return stem.concat(lonImgsIndx, ".png");
             }
             function getLatImageName(stem, lat, minLat, maxLat, numImages) {
-	        var latDiff = -(maxLat - lat); // the lat values go from 0 to -55
+	        var latDiff = (lat - minLat);
                 var latRange = (maxLat - minLat);
             
                 var latImgsStep = (latRange * 1.0)/numImages;
@@ -811,11 +811,11 @@
                 }
                 var latImgsIndx = Math.trunc(latDiff/latImgsStep);
         
-                if (latImgsIndx > 0) {
+                if (latImgsIndx < 0) {
                     latImgsIndx = 0;
                 }
-                if (-latImgsIndx >= numImages) {
-                    latImgsIndx = -(numImages - 1);
+                if (latImgsIndx >= numImages) {
+                    latImgsIndx = (numImages - 1);
                 }
                 return stem.concat(latImgsIndx, ".png");
             }
@@ -825,10 +825,12 @@
             var textureImgBot = dirName.concat(getImageName(imgStem, maxDepthSliderTest.value, minDepthTest, maxDepthTest, numImgs));
             var textureImgEdge1 = lonDirName.concat(getLonImageName(imgStem, minLonSliderTest.value, minLonTest, maxLonTest, lonNumImgs));
             var textureImgEdge2 = lonDirName.concat(getLonImageName(imgStem, maxLonSliderTest.value, minLonTest, maxLonTest, lonNumImgs));
-            var textureImgEdge3 = latDirName.concat(getLonImageName(latImgStem, minLatSliderTest.value, minLatTest, maxLatTest, latNumImgs));
             var textureImgEdge3 = latDirName.concat(getLatImageName(latImgStem, minLatSliderTest.value, minLatTest, maxLatTest, latNumImgs));
             var textureImgEdge4 = latDirName.concat(getLatImageName(latImgStem, maxLatSliderTest.value, minLatTest, maxLatTest, latNumImgs));
-
+            console.log("Lat image:", textureImgEdge3);
+            console.log("Max Lat image:", textureImgEdge4);
+            console.log("Lon image:", textureImgEdge1);
+            console.log("Max Lon image:", textureImgEdge2);
 
             var numPositions = 4;
             var pos = new Float64Array(numPositions * 3);
@@ -880,6 +882,13 @@
             var uvsEdge1 = [min_z_ratio, min_y_ratio, max_z_ratio, min_y_ratio, max_z_ratio, max_y_ratio, min_z_ratio, max_y_ratio];
 
             var uvsEdge3 = [min_z_ratio, min_x_ratio, max_z_ratio, min_x_ratio, max_z_ratio, max_x_ratio, min_z_ratio, max_x_ratio];
+        
+            // Using these two lines of code for uvsEdge1 and uvsEdge3 will make the longitude and latitude slices be in the right
+            // orientation, but they will not cutoff correctly when the depth and max depth sliders are moved. I had a similar issue
+            // before that I was able to solve by rotating the original images, but trying to rotate the images this time that have 
+            // the altered vertical bias and scale does not seem to change how they are oriented in the CVM viewer.
+            //var uvsEdge1 = [max_z_ratio, min_y_ratio, min_z_ratio, min_y_ratio, min_z_ratio, max_y_ratio, max_z_ratio, max_y_ratio];
+            //var uvsEdge3 = [max_z_ratio, min_x_ratio, min_z_ratio, min_x_ratio, min_z_ratio, max_x_ratio, max_z_ratio, max_x_ratio];
             
             var geometry = new Cesium.Geometry({
               attributes: {
