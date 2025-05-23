@@ -165,6 +165,7 @@
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
     async function loadDropdown() {
+        console.log("loadDropdown is called inside depth-slice-data.html");
         try {
             const response = await fetch('/models_drop_down');
             if (response.ok) {
@@ -227,6 +228,7 @@
 
     // Function to update bounding box
     function updateBoundingBox(lat_min, lon_min, lat_max, lon_max) {
+        console.log("updateBoundingBox is called inside depth-slice-data.html");
         if (boundingBox) {
             // Remove existing bounding box if present
             map.removeLayer(boundingBox);
@@ -267,6 +269,7 @@
 
     // Function to update the rectangle's bounds
     function updateRectangle() {
+        console.log("updateRectangle is called inside depth-slice-data.html");
         var leftLat = leftMarker.getLatLng().lat.toFixed(2);
         var leftLng = leftMarker.getLatLng().lng.toFixed(2);
         var rightLat = rightMarker.getLatLng().lat.toFixed(2);
@@ -300,6 +303,7 @@
     }
 
     function updateMarkersFromForm() {
+        console.log("updateMarkersFromForm is called inside depth-slice-data.html");
         // Get the new positions from the form
         var newStartLat = parseFloat(document.getElementById('start-lat').value);
         var newStartLng = parseFloat(document.getElementById('start-lng').value);
@@ -349,6 +353,7 @@
     document.getElementById('output-format').addEventListener('change', updateMarkersFromForm);
 
     function updateFormFields(fileName) {
+        console.log("updateFormFields is called inside depth-slice-data.html");
         const locked = document.getElementById('lock').checked;
         var vertical_units;
         const requestUrlDiv = document.getElementById('requestUrl');
@@ -452,6 +457,7 @@
     };
 
     document.getElementById('units').addEventListener('change', function () {
+        console.log("units addEventListener change is called inside depth-slice-data.html");
         const requestUrlDiv = document.getElementById('requestUrl');
         requestUrlDiv.style.display = 'none';
         // Adjust the depth based on units.
@@ -473,6 +479,7 @@
     });
 
     document.getElementById('data-file').addEventListener('change', function () {
+        console.log("data-file addEventListener change is called inside depth-slice-data.html");
         const requestUrlDiv = document.getElementById('requestUrl');
         requestUrlDiv.style.display = 'none';
         const filename = document.getElementById('data-file').value
