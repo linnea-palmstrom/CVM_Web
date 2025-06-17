@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CesiumJS Map with 3D Volume and US Coastline</title>
+    <script src="https://cesium.com/downloads/cesiumjs/releases/1.89/Build/Cesium/Cesium.js"></script>
+    <link href="https://cesium.com/downloads/cesiumjs/releases/1.89/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+    <style>
+        html, body, #cesiumContainer {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: sans-serif;
+        }
+        #controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        #controls label {
+            display: block;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="cesiumContainer"></div>
+    <div id="controls">
+        <label>Min Lat: <input type="range" id="minLat" min="38.8" max="39.0" step="0.0001" value="38.8941"></label>
+        <label>Max Lat: <input type="range" id="maxLat" min="38.8" max="39.0" step="0.0001" value="38.8951"></label>
+        <label>Min Lon: <input type="range" id="minLon" min="-77.1" max="-76.9" step="0.0001" value="-77.03637"></label>
+        <label>Max Lon: <input type="range" id="maxLon" min="-77.1" max="-76.9" step="0.0001" value="-77.03537"></label>
+        <label>Min Depth: <input type="range" id="minDepth" min="0" max="200" step="1" value="0"></label>
+        <label>Max Depth: <input type="range" id="maxDepth" min="0" max="200" step="1" value="50"></label>
+    </div>
+    <script>
+        // Initialize CesiumJS viewer
+        var viewer = new Cesium.Viewer('cesiumContainer', {
+            terrainProvider: Cesium.createWorldTerrain()
+        });
+
+        // Function to update the 3D volume
+        function updateVolume() {
+            var minLat = parseFloat(document.getElementById('minLat').value);
+            var maxLat = parseFloat(document.getElementById('maxLat').value);
+            var minLon = parseFloat(document.getElementById('minLon').value);
+            var maxLon = parseFloat(document.getElementById('maxLon').value);
+            var minDepth = parseFloat(document.getElementById('minDepth').value);
+            var maxDepth = parseFloat(document.getElementById('maxDepth').value);
+
+            var positions = [
+                minLon, minLat,
+                maxLon, minLat,
+                maxLon, maxLat,
+                minLon, maxLat
+            ];
+
+            viewer.entities.removeAll(); // Remove existing volume
+
+            viewer.entities.add({
+                name: '3D Volume',
+                polygon: {
+                    hierarchy: Cesium.Cartesian3.fromDegreesArray(positions),
+                    extrudedHeight: maxDepth,
+                    height: minDepth,
+                    material: Cesium.Color.GREEN.withAlpha(0.7),
+                    outline: true,
+                    outlineColor: Cesium.Color.BLACK
+                }
+            });
+
+            viewer.zoomTo(viewer.entities);
+        }
+
+        // Add event listeners to update volume on input change
+        document.querySelectorAll('#controls input').forEach(function(input) {
+            input.addEventListener('input', updateVolume);
+        });
+
+        // Initial volume setup
+        updateVolume();
+
+        // Fetch and plot the GeoJSON data for the US coastline
+        fetch('/us-states.json')
+            .then(response => response.json())
+            .then(data => {
+                viewer.dataSources.add(Cesium.GeoJsonDataSource.load(data, {
+                    stroke: Cesium.Color.RED,
+                    fill: Cesium.Color.RED.withAlpha(0.5),
+                    strokeWidth: 2
+                }));
+            });
+    </script>
+</body>
+</html>
+

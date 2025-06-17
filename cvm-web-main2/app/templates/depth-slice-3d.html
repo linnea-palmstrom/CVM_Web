@@ -1,0 +1,1635 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CesiumJS GeoJSON Example</title>
+    <script src="https://cesium.com/downloads/cesiumjs/releases/1.116/Build/Cesium/Cesium.js"></script>
+    <style>
+        @import url(https://cesium.com/downloads/cesiumjs/releases/1.116/Build/Cesium/Widgets/widgets.css);
+
+        .cesium-selection-wrapper {
+            display: none !important;
+        }
+
+        #cesiumContainer {
+            width: 100%;
+            height: calc(85vh - 55px);
+            float: left;
+            position: relative;
+        }
+
+        #cesiumTexture {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        #distanceControl {
+            position: absolute;
+            bottom: 20px;
+            left: 15px;
+            z-index: 1;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        #distanceDisplay {
+            margin-bottom: 5px;
+        }
+
+        #clearButton {
+            margin-right: 10px;
+        }
+
+        #fileSelection {
+            position: absolute;
+            bottom: 100px;
+            left: 10px;
+            z-index: 1;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 50px;
+        }
+
+        #logoContainer {
+            position: absolute;
+            bottom: 110px;
+            right: 10px;
+            z-index: 1;
+        }
+
+        #logoContainer img {
+            width: 200px;
+        }
+
+        #legendContainer {
+            width: auto;
+            float: left;
+            padding: 20px;
+            position: absolute;
+            bottom: 110px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 5px;
+        }
+
+        #auxLegendContainer {
+            width: auto;
+            float: left;
+            padding: 20px;
+            position: absolute;
+            bottom: 60px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 5px;
+        }
+
+        .legendItem {
+            margin-bottom: 10px;
+            display: inline-block;
+            margin-right: 20px;
+        }
+
+        .legendColor {
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        .checkboxRow {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .checkboxRow label {
+            margin-right: 10px;
+        }
+
+        #toggleButton,
+        #controlContainer {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 100;
+            padding: 10px;
+            background-color: #ffffff;
+            border: 1px solid #cccccc;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #controlContainer {
+            background-color: rgba(255, 255, 255, 0.4);
+            z-index: 1000;
+        }
+
+        #toggleGlobeContainer,
+        #toggleSubductionInterface,
+        #eqcontrols,
+        #toggleTerrainOcclusion {
+            margin-bottom: 10px;
+        }
+
+        #eqcontrols {
+            background-color: transparent;
+        }
+
+        .sliderContainer {
+            margin-bottom: 10px;
+        }
+
+        .sliderLabel {
+            margin-right: 10px;
+        }
+
+        .button {
+            background-color: #004F59;
+            color: lightgray;
+            width: 100%;
+            border-radius: 15px;
+            /* Adjust the value to make the corners more or less rounded */
+        }
+    </style>
+</head>
+
+<body>
+    <!--script type="module" src="./depth-slice-3d.html"></script-->
+    <div id="cesiumContainer"></div>
+    <div id="controlContainer">
+        <center><b>CFM 3D Viewer</b></center>
+        <hr />
+        <div id="toggleGlobeContainer">
+            <label>
+                <input type="checkbox" id="toggleGlobeCheckbox">Imagery layer
+            </label>
+        </div>
+        <div id="toggleSubductionInterface">
+            <label>
+                <input type="checkbox" id="toggleSubductionCheckbox" checked> Cascadia Subduction Interface
+            </label>
+        </div>
+        <div id="eqcontrols">
+            <label><input type="checkbox" id="showEarthquakesCheckbox" checked> Earthquakes</label>
+            <br>
+            <label>Circle Size: <input type="range" id="circleSizeSlider" min="0" max="0.2" step="0.01"
+                    value="0.04"></label>
+        </div>
+        <div id="toggleTerrainOcclusion">
+            <label>
+                <input type="checkbox" id="toggleTerrainOcclusionCheckbox" checked> Terrain Occlusion
+            </label>
+        </div>
+        <!-- Slider controls for model boundaries -->
+        <div>
+            <hr style="border-top: 1px solid #0000FF" />
+        </div>
+        <form id="iframe-form">
+            <div>
+                <label for="data-file">CVM:</label>
+                <select id="data-file" name="data_file"></select>
+            </div>
+            <div>&nbsp;</div>
+            <div class="sliderContainer">
+                <label class="sliderLabel">Min Latitude: <input type="range" id="minLatSlider" min="47" max="50.9"
+                        step="0.1" value="47"></label>
+                <span id="minLatValue">47</span>
+            </div>
+            <div class="sliderContainer">
+                <label class="sliderLabel">Max Latitude: <input type="range" id="maxLatSlider" min="47" max="50.9"
+                        step="0.1" value="50.9"></label>
+                <span id="maxLatValue">50.9</span>
+            </div>
+            <div class="sliderContainer">
+                <label class="sliderLabel">Min Longitude: <input type="range" id="minLonSlider" min="-126" max="-121.1"
+                        step="0.1" value="-126"></label>
+                <span id="minLonValue">-126</span>
+            </div>
+            <div class="sliderContainer">
+                <label class="sliderLabel">Max Longitude: <input type="range" id="maxLonSlider" min="-126" max="-121.1"
+                        step="0.1" value="-121.1"></label>
+                <span id="maxLonValue">-121.1</span>
+            </div>
+            <div class="sliderContainer">
+                <label class="sliderLabel">Depth (km): <input type="range" id="minDepthSlider" min="0" max="93" step="1"
+                        value="0"></label>
+                <span id="minDepthValue">0</span>
+            </div>
+            <div id="toggleDiagSlice">
+                <label>
+                    <input type="checkbox" id="toggleDiagSliceCheckbox">Diagonal Slice
+                </label>
+            </div>
+            <div class="sliderContainer">
+                <label class="sliderLabel">Diagonal Slice (%): <input type="range" id="diagSlider" min="0" max="100" step="1"
+                        value="0"></label>
+                <span id="diagValue">0</span>
+            </div>
+
+            <!-- Change the maxDepthSlider so it appears on the webpage which allows me to add the other sides of the bounding box to the globe -->
+            <!--div class="sliderContainer" style="display: none;"-->
+            <div class="sliderContainer">
+                <label class="sliderLabel">Max Depth (km): <input type="range" id="maxDepthSlider" min="0" max="93"
+                        step="1" value="93"></label>
+                <span id="maxDepthValue">93</span>
+            </div>
+            <div class="sliderContainer">
+                <label class="sliderLabel">Alpha: <input type="range" id="alphaSlider" min="0" max="1" step="0.1"
+                        value="0.3"></label>
+                <span id="alphaValue">0.3</span>
+            </div>
+            <button type="button" class="button" id="sync-to-parent">Sync to Form</button>
+        </form>
+
+    </div>
+
+    <div id="mapControls">
+        <div id="logoContainer">
+            <img src="/static/images/crescent_logos_horizontal_transparent.png" alt="Logo">
+        </div>
+        <div id="legendContainer"></div>
+        <div id="auxLegendContainer"></div>
+        <div id="distanceControl">
+            <label><input type="checkbox" id="clearCheckbox"> Measure Distance</label>
+            <div id="distanceDisplay">Click distances will appear here</div>
+        </div>
+    </div>
+
+    <script>
+
+        Cesium.Ion.defaultAccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJmZDQzMzIyOS1lZDFlLTRhNTgtYTE1Yy04YzNkNWQ2ZmI4OTIiLCJpZCI6MjAxODU5LCJpYXQiOjE3MTA0MDQ5MDd9._E6MFZMMjbxpzC4qYYROP1ldtV1MJn0f56W5woAtboc";
+        const apiKey = "AAPKafd67a0544f04817b08c2f65379b76c8pz3w8RSH_npDJjf9phbqEJ2kbD8QnfX-lzVlJ7dUi_3pQjwWS-vNFeXT6jacicfJ";
+
+        var viewer = new Cesium.Viewer('cesiumContainer', {
+            depthPlaneEllipsoidOffset: 10000,
+            nearToFarRatio: 1e6,
+            farToNearRatio: 1e-6,
+            sceneMode: Cesium.SceneMode.SCENE3D,
+            scene3DOnly: true,
+            enableCollisionDetection: false,
+            baseLayer: Cesium.ImageryLayer.fromProviderAsync(Cesium.IonImageryProvider.fromAssetId(3813)),
+            globe: new Cesium.Globe(Cesium.Ellipsoid.WGS84, {
+                minimumZoomDistance: 0.0
+            })
+        });
+
+        // Function to read and clear an item from localStorage
+        function readAndClearLocalStorageItem(key) {
+            // Step 1: Read the item from localStorage
+            const item = localStorage.getItem(key);
+
+            // Step 2: Remove the item from localStorage
+            localStorage.removeItem(key);
+
+            // Step 3: Return the parsed item, or null if it doesn't exist
+            return item !== null ? JSON.parse(item) : null;
+        }
+
+        // Usage example to get selectedLines
+        const selectedLines = readAndClearLocalStorageItem('selectedLines') || [];
+        if (selectedLines.length != 0) {
+            console.log('Selected lines:', selectedLines);
+        }
+
+        viewer.scene.globe.frontFaceAlphaByDistance = new Cesium.NearFarScalar(50.0, 0.0, 100.0, 1.0);
+        viewer.scene.globe.show = false;
+        viewer.scene.skyAtmosphere.show = false;
+        viewer.scene.fog.enabled = false;
+        viewer.scene.globe.showGroundAtmosphere = false;
+        viewer.scene.globe.depthTestAgainstTerrain = true;
+
+        const toggleTerrainOcclusionCheckbox = document.getElementById('toggleTerrainOcclusionCheckbox');
+        toggleTerrainOcclusionCheckbox.addEventListener('change', function () {
+            viewer.scene.globe.depthTestAgainstTerrain = toggleTerrainOcclusionCheckbox.checked;
+        });
+
+        viewer.scene.setTerrain(new Cesium.Terrain(Cesium.CesiumTerrainProvider.fromIonAssetId(2426648)));
+        const scene = viewer.scene;
+        const globe = scene.globe;
+        const camera = scene.camera;
+
+        scene.fog.enabled = false;
+        globe.showGroundAtmosphere = false;
+        globe.enableLighting = true;
+
+        scene.light = new Cesium.DirectionalLight({
+            direction: new Cesium.Cartesian3(1, 0, 0),
+        });
+
+        const scratchNormal = new Cesium.Cartesian3();
+        scene.preRender.addEventListener(function (scene, time) {
+            const surfaceNormal = globe.ellipsoid.geodeticSurfaceNormal(camera.positionWC, scratchNormal);
+            const negativeNormal = Cesium.Cartesian3.negate(surfaceNormal, surfaceNormal);
+            scene.light.direction = Cesium.Cartesian3.normalize(Cesium.Cartesian3.add(negativeNormal, camera.rightWC, surfaceNormal), scene.light.direction);
+        });
+
+        globe.maximumScreenSpaceError = 1.0;
+        viewer.scene.backgroundColor = new Cesium.Color(0.0, 0.0, 0.0, 0.0);
+        viewer.camera.flyTo({
+            destination: Cesium.Rectangle.fromDegrees(-130.0, 39.0, -116.0, 52.0)
+        });
+
+        viewer.camera.flyTo({
+            destination: Cesium.Cartesian3.fromDegrees(-132.76, 39.84, 718005.890),
+            orientation: {
+                heading: Cesium.Math.toRadians(48.65),
+                pitch: Cesium.Math.toRadians(-36.05),
+                roll: 0.3
+            }
+        });
+
+        viewer.scene.globe.baseColor = Cesium.Color.TRANSPARENT;
+        viewer.animation.container.style.visibility = 'hidden';
+        viewer.timeline.container.style.visibility = 'hidden';
+
+        var dataSources = [];
+        const auxData = ["https://raw.githubusercontent.com/cascadiaquakes/crescent-cfm/main/crescent_cfm_files/cascadia_subduction_interface_temp.geojson"];
+        const auxLabel = ["Cascadia Subduction Interface", "CVM Coverage"];
+        const auxColor = [Cesium.Color.GREEN, Cesium.Color.BLUE];
+        const auxFillOpacity = [0.5, 0.5];
+        const auxLineWidth = [4, 4];
+
+        var data = ['/static/boundary_geojson/us-states.json', '/static/boundary_geojson/georef-canada-province-public.geojson', 'https://raw.githubusercontent.com/cascadiaquakes/crescent-cfm/main/crescent_cfm_files/crescent_cfm_crustal_traces.geojson', 'https://raw.githubusercontent.com/cascadiaquakes/crescent-cfm/main/crescent_cfm_files/crescent_cfm_crustal_3d.geojson'];
+        var label = ['US', 'Canada', 'CRESCENT Cascadia Fault Traces', 'CRESCENT Cascadia Fault Surfaces', 'Earthquakes M > 4'];
+        const geojson_files = ['https://raw.githubusercontent.com/cascadiaquakes/crescent-cfm/main/crescent_cfm_files/crescent_cfm_crustal_traces.geojson', 'https://raw.githubusercontent.com/cascadiaquakes/crescent-cfm/main/crescent_cfm_files/crescent_cfm_crustal_3d.geojson']
+        const dataColor = [Cesium.Color.GRAY, Cesium.Color.DIMGRAY, Cesium.Color.CRIMSON, Cesium.Color.DARKMAGENTA, Cesium.Color.YELLOW];
+        const fillOpacity = [0.0, 0.0, 0.5, 0.5];
+        const lineWidth = [2, 0.5, 2, 2];
+
+        // Really need only one variable, but my attempts at merging them was drawing extra diagonal line.
+        var boxEntityTop;
+        var boxEntityBottom;
+        var boxEntityEdge1;
+        var boxEntityEdge2;
+        var boxEntityEdge3;
+        var boxEntityEdge4;
+        var boxEntityDiag;
+
+        async function loadDropdown() {
+            console.log("Calling loadDropdown");
+            try {
+                const response = await fetch('/models_drop_down');
+                if (response.ok) {
+                    const dropdownHTML = await response.text();
+                    document.getElementById('data-file').innerHTML = dropdownHTML;
+                } else {
+                    console.error('Failed to load dropdown:', response.statusText);
+                    document.getElementById('data-file').textContent = 'Failed to load dropdown.';
+                }
+            } catch (error) {
+                console.error('Error fetching dropdown:', error);
+                document.getElementById('data-file').textContent = 'Error loading dropdown.';
+            }
+        }
+
+        //select an option from a <select> menu based on the option’s text
+        function selectOptionByText(text) {
+            const selectElement = document.getElementById('data-file');
+            const options = selectElement.options;
+
+            for (let i = 0; i < options.length; i++) {
+                if (options[i].text === text) {
+                    selectElement.selectedIndex = i;
+                    optionFound = true;
+
+                    // Trigger the change event
+                    updateSlidersFromDropdown();
+
+                    return;
+                }
+            }
+
+            alert('Option not found: ' + text);
+        }
+
+
+
+        // Send message to the parent indicating ready to sync.
+        document.addEventListener('DOMContentLoaded', function () {
+            const iframeForm = document.getElementById('iframe-form');
+
+            // Function to send the current form data to the parent
+            function syncToParent() {
+                console.log("Calling syncToParent");
+                const formData = new FormData(iframeForm);
+                const data = {};
+                formData.forEach((value, key) => {
+                    data[key] = value;
+                });
+
+                window.parent.postMessage({
+                    type: 'syncFromIframe',
+                    data
+                }, window.location.origin);
+            }
+
+            // Function to handle messages from the parent
+            window.addEventListener('message', function (event) {
+                if (event.origin !== window.location.origin) {
+                    return; // Ignore messages from other origins for security
+                }
+                //alert(event.data.type)
+                if (event.data.type === 'syncFromParent') {
+                    //alert("HERE")
+                    function copyIframeFormValues() {
+                        console.log("Calling copyIframeFormValues");
+                        const data = event.data.data;
+
+                        // The model selection update.
+                        selectOptionByText(data['data-file'])
+
+                        // Sliders update.
+                        document.getElementById('minLonSlider').value = ['start-lng'];
+                        document.getElementById('maxLonSlider').value = data['end-lng'];
+                        document.getElementById('minLatSlider').value = data['start-lat'];
+                        document.getElementById('maxLatSlider').value = data['end-lat'];
+                        document.getElementById('minDepthSlider').value = data['start-depth'];
+                        
+                        console.log("[start-lng]:", ['start-lng']);
+                        console.log("data[end-lng]:", data['end-lng']);
+                        console.log("data[start-lat]:", data['start-lat']);
+                        console.log("data[end-lat]:", data['end-lat']);
+                        console.log("data[start-depth]:", data['start-depth']);
+
+                        // Slider labels update.
+                        document.getElementById('minLonValue').textContent = data['start-lng'];
+                        document.getElementById('maxLonValue').textContent = data['end-lng'];
+                        document.getElementById('minLatValue').textContent = data['start-lat'];
+                        document.getElementById('maxLatValue').textContent = data['end-lat'];
+                        document.getElementById('minDepthValue').textContent = data['start-depth'];
+
+                        // Update the outline box.
+                        updateBoxOutline(parseFloat(minLatSlider.value), parseFloat(maxLatSlider.value), parseFloat(minLonSlider.value), parseFloat(maxLonSlider.value), parseFloat(minDepthSlider.value), parseFloat(maxDepthSlider.value), parseFloat(document.getElementById('alphaSlider').value));
+
+                        // document.getElementById('end-depth').value = iframeDoc.getElementById('maxDepthSlider').value;
+
+                    }
+                    copyIframeFormValues();
+
+                }
+
+                if (event.data.type === 'requestSyncToParent') {
+                    console.log("Run syncToParent");
+                    syncToParent();
+                }
+            });
+
+            // Sync to parent button
+            document.getElementById('sync-to-parent').addEventListener('click', syncToParent);
+        });
+
+
+
+        // Call loadDropdown when the page has finished loading
+        document.addEventListener('DOMContentLoaded', loadDropdown);
+
+
+        for (var i = 0; i < data.length; i++) {
+            (function (index) {
+                const dataSource = Cesium.GeoJsonDataSource.load(data[index], {
+                    label: label[index],
+                    stroke: dataColor[index],
+                    fill: dataColor[index].withAlpha(fillOpacity[index]),
+                    strokeWidth: lineWidth[index],
+                    markerSymbol: '?'
+                });
+                dataSource.then(function (dataSource) {
+                    var entitiesToRemove = [];
+                    dataSource.entities.values.forEach(function (entity) {
+                        var ok = true;
+                        // Display all if selectedLines is empty.
+                        if (selectedLines.length != 0) {
+                            if (geojson_files.includes(data[index]) && !selectedLines.includes(String(entity.properties.id))) {
+                                ok = false;
+                                entitiesToRemove.push(entity);
+                            }
+                        }
+                        if (ok) {
+                            if (Cesium.defined(entity.polygon)) {
+                                var coordinates = entity.polygon.hierarchy.getValue().positions;
+                                coordinates.forEach(function (coordinate) {
+                                    Cesium.Cartographic.fromCartesian(coordinate);
+                                });
+                            } else if (Cesium.defined(entity.polyline)) {
+                                var positions = entity.polyline.positions.getValue();
+                                positions.forEach(function (position) {
+                                    Cesium.Cartographic.fromCartesian(position);
+                                });
+                            }
+                            var description = '';
+                            var properties = entity.properties;
+                            for (var propertyName in properties) {
+                                if (properties.hasOwnProperty(propertyName) && typeof properties[propertyName] !== 'function') {
+                                    var propNameWithoutUnderscore = propertyName.replace(/^_/, '');
+                                    description += propNameWithoutUnderscore + ': ' + properties[propertyName] + '<br />';
+                                }
+                            }
+                            entity.description = description;
+                        }
+                    });
+
+                    entitiesToRemove.forEach(function (entity) {
+                        dataSource.entities.remove(entity);
+                    });
+
+                    dataSources.push(dataSource);
+                    viewer.dataSources.add(dataSource);
+                });
+
+                if (i == 0) {
+                    async function loadEarthquakeData(url) {
+                        try {
+                            const dataSource = await Cesium.GeoJsonDataSource.load(url, {
+                                clampToGround: false
+                            });
+                            earthquakeDataSource = dataSource;
+                            viewer.dataSources.add(dataSource);
+                            updateEarthquakeVisibility();
+
+                            const entities = dataSource.entities.values;
+                            const circleSizeSlider = document.getElementById('circleSizeSlider');
+                            entities.forEach(function (entity) {
+                                entity.billboard = undefined;
+                                if (entity.position) {
+                                    let coordinates = Cesium.Cartographic.fromCartesian(entity.position.getValue(Cesium.JulianDate.now()));
+                                    let depthInMeters = coordinates.height * 1000;
+                                    entity.position = new Cesium.ConstantPositionProperty(Cesium.Cartesian3.fromDegrees(
+                                        Cesium.Math.toDegrees(coordinates.longitude),
+                                        Cesium.Math.toDegrees(coordinates.latitude),
+                                        -depthInMeters
+                                    ));
+                                }
+                                entity.point = new Cesium.PointGraphics({
+                                    pixelSize: calculateMarkerSize(circleSizeSlider.value, entity.properties.mag.getValue()),
+                                    color: Cesium.Color.YELLOW
+                                });
+                            });
+                        } catch (error) {
+                            console.log('Error loading earthquake data:', error);
+                        }
+                    }
+
+                    loadEarthquakeData('https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=1970-01-01&minmagnitude=4&minlatitude=30&maxlatitude=50&minlongitude=-125&maxlongitude=-100');
+
+                    function updateEarthquakeVisibility() {
+                        if (earthquakeDataSource) {
+                            var showEarthquakes = document.getElementById('showEarthquakesCheckbox').checked;
+                            earthquakeDataSource.show = showEarthquakes;
+                        }
+                    }
+
+                    document.getElementById('showEarthquakesCheckbox').addEventListener('change', updateEarthquakeVisibility);
+
+                    function calculateMarkerSize(baseSize, magnitude) {
+                        const scaleFactor = 3;
+                        return baseSize * Math.pow(magnitude, scaleFactor);
+                    }
+
+                    document.getElementById('circleSizeSlider').addEventListener('input', function () {
+                        if (earthquakeDataSource) {
+                            var entities = earthquakeDataSource.entities.values;
+                            entities.forEach(function (entity) {
+                                entity.point = new Cesium.PointGraphics({
+                                    color: Cesium.Color.YELLOW,
+                                    pixelSize: calculateMarkerSize(circleSizeSlider.value, entity.properties.mag)
+                                });
+                            });
+                        }
+                    });
+                }
+            })(i);
+        }
+
+        var legendContainer = document.getElementById('legendContainer');
+        label.forEach(function (labelText, i) {
+            var legendItem = document.createElement('div');
+            legendItem.classList.add('legendItem');
+
+            var legendColor = document.createElement('div');
+            legendColor.classList.add('legendColor');
+            legendColor.style.backgroundColor = dataColor[i].toCssColorString();
+
+            var legendLabel = document.createElement('span');
+            legendLabel.textContent = labelText;
+
+            legendItem.appendChild(legendColor);
+            legendItem.appendChild(legendLabel);
+            legendContainer.appendChild(legendItem);
+        });
+
+        var auxLegendContainer = document.getElementById('auxLegendContainer');
+        auxColor.forEach(function (color, i) {
+            var legendItem = document.createElement('div');
+            legendItem.classList.add('legendItem');
+
+            var legendColor = document.createElement('div');
+            legendColor.classList.add('legendColor');
+            legendColor.style.backgroundColor = color.toCssColorString();
+
+            var legendLabel = document.createElement('span');
+            legendLabel.textContent = auxLabel[i];
+
+            legendItem.appendChild(legendColor);
+            legendItem.appendChild(legendLabel);
+            auxLegendContainer.appendChild(legendItem);
+        });
+
+        async function loadDropdown() {
+            console.log("Calling loadDropdown");
+            try {
+                const response = await fetch('/models_drop_down_coverage');
+                console.log("response:", response);
+                if (response.ok) {
+                    const dropdownHTML = await response.text();
+                    document.getElementById('data-file').innerHTML = dropdownHTML;
+                    console.log("data-file:", document.getElementById('data-file'));
+                    // Initialize sliders based on the first dropdown option
+                    updateSlidersFromDropdown();
+                } else {
+                    console.error('Failed to load dropdown:', response.statusText);
+                    document.getElementById('data-file').textContent = 'Failed to load dropdown.';
+                }
+            } catch (error) {
+                console.error('Error fetching dropdown:', error);
+                document.getElementById('data-file').textContent = 'Error loading dropdown.';
+            }
+        }
+
+        // Call loadDropdown when the page has finished loading
+        document.addEventListener('DOMContentLoaded', loadDropdown);
+
+
+
+        async function updateBoxOutline(minLat, maxLat, minLon, maxLon, minDepth, maxDepth, alpha) {
+            // fetch the json file with the information about the group of slice images
+            //var jsonFile = '../static/json/LP3.json';
+            console.log("selected data-file index:", document.getElementById('data-file').selectedIndex);
+            console.log("selected data-file:", document.getElementById('data-file').options[document.getElementById('data-file').selectedIndex].text);
+            var data_set = document.getElementById('data-file').options[document.getElementById('data-file').selectedIndex].text;
+            var jsonFile = '../static/json/LP4.json';
+            //var jsonFile = '';
+            if (data_set == 'Cascadia_ANT+RF_Delph2018') {
+                jsonFile = '../static/json/LP4.json';
+            } else if (data_set == 'SVI_EQTOMO_Savard2018') {
+                //jsonFile = '../static/json/LP5.json';
+                jsonFile = '../static/json/LP6.json';
+                console.log("Reading from the ", jsonFile, "file.");
+            } else {
+                console.log("The data set selected is not available");
+            }
+            var numImgs = 0;
+            var dirName = '';
+            var imgStem = '';
+            var minPer = 0;
+            var lonNumImgs = 0;
+            var lonDirName = '';
+            var lonImgStem = '';
+            var lonMinPer = 0;
+            var latNumImgs = 0;
+            var latDirName = '';
+            var latImgStem = '';
+            var latMinPer = 0;
+
+            response= await fetch(jsonFile);
+            data = await response.json();
+            // Assuming the JSON structure matches your form fields' ids
+            for (const [key, value] of Object.entries(data)) {
+                if (key === "num_images") {
+                    numImgs = value;
+                }
+                if (key === "dir_name") {
+                    dirName = value;
+                }
+                if (key === "img_stem") {
+                    imgStem = value;
+                    console.log("imgStem: ", imgStem);
+                }
+                if (key === "min_per") {
+                    minPer = value;
+                }
+                if (key === "lon_axis_num_images") {
+                    lonNumImgs = value;
+                }
+                if (key === "lon_axis_dir_name") {
+                    lonDirName = value;
+                }
+                if (key === "lon_axis_img_stem") {
+                    lonImgStem = value;
+                }
+                if (key === "lon_axis_min_per") {
+                    lonMinPer = value;
+                }
+                if (key === "lat_axis_num_images") {
+                    latNumImgs = value;
+                }
+                if (key === "lat_axis_dir_name") {
+                    latDirName = value;
+                }
+                if (key === "lat_axis_img_stem") {
+                    latImgStem = value;
+                }
+                if (key === "lat_axis_min_per") {
+                    latMinPer = value;
+                }
+            }
+
+            // Coordinates for the four corners.
+            var positions = Cesium.Cartesian3.fromDegreesArrayHeights([
+                minLon, minLat, minDepth * -1000,  // Longitude, Latitude, Height
+                maxLon, minLat, minDepth * -1000,
+                maxLon, maxLat, minDepth * -1000,
+                minLon, maxLat, minDepth * -1000,
+            ]);
+
+            // Coordinates for the four corners for the bottom side of the bounding box.
+            var positionsBot = Cesium.Cartesian3.fromDegreesArrayHeights([
+                minLon, minLat, maxDepth * -1000,  // Longitude, Latitude, Height
+                maxLon, minLat, maxDepth * -1000,
+                maxLon, maxLat, maxDepth * -1000,
+                minLon, maxLat, maxDepth * -1000,
+            ]);
+
+            // Coordinates for the four corners for the edge 1 of the bounding box.
+            var positionsEdge1 = Cesium.Cartesian3.fromDegreesArrayHeights([
+                minLon, minLat, minDepth * -1000,  // Longitude, Latitude, Height
+                minLon, minLat, maxDepth * -1000,
+                minLon, maxLat, maxDepth * -1000,
+                minLon, maxLat, minDepth * -1000,
+            ]);
+            // Coordinates for the four corners for the edge 2 of the bounding box.
+            var positionsEdge2 = Cesium.Cartesian3.fromDegreesArrayHeights([
+                maxLon, minLat, minDepth * -1000,  // Longitude, Latitude, Height
+                maxLon, minLat, maxDepth * -1000,
+                maxLon, maxLat, maxDepth * -1000,
+                maxLon, maxLat, minDepth * -1000,
+            ]);
+            // Coordinates for the four corners for the edge 3 of the bounding box.
+            var positionsEdge3 = Cesium.Cartesian3.fromDegreesArrayHeights([
+                minLon, minLat, minDepth * -1000,  // Longitude, Latitude, Height
+                minLon, minLat, maxDepth * -1000,
+                maxLon, minLat, maxDepth * -1000,
+                maxLon, minLat, minDepth * -1000,
+            ]);
+            // Coordinates for the four corners for the edge 4 of the bounding box.
+            var positionsEdge4 = Cesium.Cartesian3.fromDegreesArrayHeights([
+                minLon, maxLat, minDepth * -1000,  // Longitude, Latitude, Height
+                minLon, maxLat, maxDepth * -1000,
+                maxLon, maxLat, maxDepth * -1000,
+                maxLon, maxLat, minDepth * -1000,
+            ]);
+
+            if (boxEntityTop !== null) {
+                viewer.scene.primitives.remove(boxEntityTop);
+            }
+            if (boxEntityBottom !== null) {
+                viewer.scene.primitives.remove(boxEntityBottom);
+            }
+            if (boxEntityEdge1 !== null) {
+                viewer.scene.primitives.remove(boxEntityEdge1);
+            }
+            if (boxEntityEdge2 !== null) {
+                viewer.scene.primitives.remove(boxEntityEdge2);
+            }
+            if (boxEntityEdge3 !== null) {
+                viewer.scene.primitives.remove(boxEntityEdge3);
+            }
+            if (boxEntityEdge4 !== null) {
+                viewer.scene.primitives.remove(boxEntityEdge4);
+            }
+
+
+            const minDepthSliderTest = document.getElementById('minDepthSlider');
+            const maxDepthSliderTest = document.getElementById('maxDepthSlider');
+            const minLonSliderTest = document.getElementById('minLonSlider');
+            const maxLonSliderTest = document.getElementById('maxLonSlider');
+            const minLatSliderTest = document.getElementById('minLatSlider');
+            const maxLatSliderTest = document.getElementById('maxLatSlider');
+
+            const diagSliderTest = document.getElementById('diagSlider');
+            console.log("Diagonal Slider value: ", diagSliderTest.value);
+            console.log("Diagonal Slider min value: ", diagSliderTest.min);
+            console.log("Diagonal Slider max value: ", diagSliderTest.max);
+
+            
+            var minDepthTest = minDepthSliderTest.min;
+            var maxDepthTest = minDepthSliderTest.max;
+            var minLonTest = minLonSliderTest.min;
+            var maxLonTest = minLonSliderTest.max;
+            var minLatTest = minLatSliderTest.min;
+            var maxLatTest = minLatSliderTest.max;
+
+            var depthDiff = minDepthSliderTest.value - minDepthTest;
+            var depthRange = (maxDepthTest - minDepthTest) + 1;
+
+            
+            //function getImageName(stem, depth, minDepth, maxDepth, numImages) {
+            function getImageName(stem, minPer, depth, minDepth, maxDepth, numImages) {
+	        var depthDiff = depth - minDepth;
+                var depthRange = (maxDepth - minDepth) + 1;
+            
+                var depthImgsStep = (depthRange * 1.0)/numImages;
+                if (depthImgsStep == 0) {
+                    depthImgsStep = 1;
+                }
+                var depthImgsIndx = Math.trunc(depthDiff/depthImgsStep);
+                var depthImgsIndx = minPer + Math.trunc(depthDiff/depthImgsStep);
+        
+                if (depthImgsIndx < 0) {
+                    depthImgsIndx = 0;
+                }
+                //if (depthImgsIndx > numImages) {
+                    //depthImgsIndx = numImages - 1;
+                //}
+                if (depthImgsIndx > (numImages + minPer)) {
+                    depthImgsIndx = (numImages + minPer - 1);
+                }
+                return stem.concat(depthImgsIndx, ".png");
+            }
+            //function getLonImageName(stem, lon, minLon, maxLon, numImages) {
+            function getLonImageName(stem, minPer, lon, minLon, maxLon, numImages) {
+	        var lonDiff = lon - minLon;
+                var lonRange = (maxLon - minLon);
+            
+                var lonImgsStep = (lonRange * 1.0)/numImages;
+                if (lonImgsStep == 0) {
+                    lonImgsStep = 1;
+                }
+                //var lonImgsIndx = Math.trunc(lonDiff/lonImgsStep);
+                var lonImgsIndx = minPer + Math.trunc(lonDiff/lonImgsStep);
+        
+                if (lonImgsIndx < 0) {
+                    lonImgsIndx = 0;
+                }
+                //if (lonImgsIndx >= numImages) {
+                    //lonImgsIndx = (numImages - 1);
+                //}
+                if (lonImgsIndx >= (numImages + minPer)) {
+                    lonImgsIndx = (numImages + minPer - 1);
+                }
+                return stem.concat(lonImgsIndx, ".png");
+            }
+            //function getLatImageName(stem, lat, minLat, maxLat, numImages) {
+            function getLatImageName(stem, minPer, lat, minLat, maxLat, numImages) {
+	        var latDiff = (lat - minLat);
+                var latRange = (maxLat - minLat);
+            
+                var latImgsStep = (latRange * 1.0)/numImages;
+                if (latImgsStep == 0) {
+                    latImgsStep = 1;
+                }
+                //var latImgsIndx = Math.trunc(latDiff/latImgsStep);
+                var latImgsIndx = minPer + Math.trunc(latDiff/latImgsStep);
+        
+                if (latImgsIndx < 0) {
+                    latImgsIndx = 0;
+                }
+                //if (latImgsIndx >= numImages) {
+                    //latImgsIndx = (numImages - 1);
+                //}
+                if (latImgsIndx >= (numImages + minPer)) {
+                    latImgsIndx = (numImages + minPer - 1);
+                }
+                return stem.concat(latImgsIndx, ".png");
+            }
+
+            //var textureImg = dirName.concat(getImageName(imgStem, minDepthSliderTest.value, minDepthTest, maxDepthTest, numImgs));
+            var textureImg = dirName.concat(getImageName(imgStem, minPer, minDepthSliderTest.value, minDepthTest, maxDepthTest, numImgs));
+            
+            //var textureImgBot = dirName.concat(getImageName(imgStem, maxDepthSliderTest.value, minDepthTest, maxDepthTest, numImgs));
+            var textureImgBot = dirName.concat(getImageName(imgStem, minPer, maxDepthSliderTest.value, minDepthTest, maxDepthTest, numImgs));
+            //var textureImgEdge1 = lonDirName.concat(getLonImageName(imgStem, minLonSliderTest.value, minLonTest, maxLonTest, lonNumImgs));
+            var textureImgEdge1 = lonDirName.concat(getLonImageName(lonImgStem, lonMinPer, minLonSliderTest.value, minLonTest, maxLonTest, lonNumImgs));
+            //var textureImgEdge2 = lonDirName.concat(getLonImageName(imgStem, maxLonSliderTest.value, minLonTest, maxLonTest, lonNumImgs));
+            var textureImgEdge2 = lonDirName.concat(getLonImageName(lonImgStem, lonMinPer, maxLonSliderTest.value, minLonTest, maxLonTest, lonNumImgs));
+            //var textureImgEdge3 = latDirName.concat(getLatImageName(latImgStem, minLatSliderTest.value, minLatTest, maxLatTest, latNumImgs));
+            var textureImgEdge3 = latDirName.concat(getLatImageName(latImgStem, latMinPer, minLatSliderTest.value, minLatTest, maxLatTest, latNumImgs));
+            //var textureImgEdge4 = latDirName.concat(getLatImageName(latImgStem, maxLatSliderTest.value, minLatTest, maxLatTest, latNumImgs));
+            var textureImgEdge4 = latDirName.concat(getLatImageName(latImgStem, latMinPer, maxLatSliderTest.value, minLatTest, maxLatTest, latNumImgs));
+            console.log("Lat image:", textureImgEdge3);
+            console.log("Max Lat image:", textureImgEdge4);
+            console.log("Lon image:", textureImgEdge1);
+            console.log("Max Lon image:", textureImgEdge2);
+
+            var numPositions = 4;
+            var pos = new Float64Array(numPositions * 3);
+                      for (var i = 0; i < numPositions; ++i) {
+                          pos[i * 3] = positions[i].x;
+                          pos[i * 3 + 1] = positions[i].y;
+                          pos[i * 3 + 2] = positions[i].z;
+                      }
+
+            var posBot = new Float64Array(numPositions * 3);
+                      for (var i = 0; i < numPositions; ++i) {
+                          posBot[i * 3] = positionsBot[i].x;
+                          posBot[i * 3 + 1] = positionsBot[i].y;
+                          posBot[i * 3 + 2] = positionsBot[i].z;
+                      }
+
+            var posEdge1 = new Float64Array(numPositions * 3);
+                      for (var i = 0; i < numPositions; ++i) {
+                          posEdge1[i * 3] = positionsEdge1[i].x;
+                          posEdge1[i * 3 + 1] = positionsEdge1[i].y;
+                          posEdge1[i * 3 + 2] = positionsEdge1[i].z;
+                      }
+            var posEdge2 = new Float64Array(numPositions * 3);
+                      for (var i = 0; i < numPositions; ++i) {
+                          posEdge2[i * 3] = positionsEdge2[i].x;
+                          posEdge2[i * 3 + 1] = positionsEdge2[i].y;
+                          posEdge2[i * 3 + 2] = positionsEdge2[i].z;
+                      }
+            var posEdge3 = new Float64Array(numPositions * 3);
+                      for (var i = 0; i < numPositions; ++i) {
+                          posEdge3[i * 3] = positionsEdge3[i].x;
+                          posEdge3[i * 3 + 1] = positionsEdge3[i].y;
+                          posEdge3[i * 3 + 2] = positionsEdge3[i].z;
+                      }
+            var posEdge4 = new Float64Array(numPositions * 3);
+                      for (var i = 0; i < numPositions; ++i) {
+                          posEdge4[i * 3] = positionsEdge4[i].x;
+                          posEdge4[i * 3 + 1] = positionsEdge4[i].y;
+                          posEdge4[i * 3 + 2] = positionsEdge4[i].z;
+                      }
+            var min_x_ratio = (minLon - minLonSliderTest.min)/(maxLonSliderTest.max - minLonSliderTest.min);
+            var max_x_ratio = (maxLon - maxLonSliderTest.min)/(maxLonSliderTest.max - minLonSliderTest.min);
+            var min_y_ratio = (minLat - minLatSliderTest.min)/(maxLatSliderTest.max - minLatSliderTest.min);
+            var max_y_ratio = (maxLat - maxLatSliderTest.min)/(maxLatSliderTest.max - minLatSliderTest.min);
+            var uvs = [min_x_ratio, min_y_ratio, max_x_ratio, min_y_ratio, max_x_ratio, max_y_ratio, min_x_ratio, max_y_ratio];
+            var indexs = new Uint16Array([0, 1, 2, 2, 3, 0]);
+            var min_z_ratio = (minDepth - minDepthSliderTest.min)/(maxDepthSliderTest.max - minDepthSliderTest.min);
+            var max_z_ratio = (maxDepth - maxDepthSliderTest.min)/(maxDepthSliderTest.max - minDepthSliderTest.min);
+            var uvsEdge1 = [min_z_ratio, min_y_ratio, max_z_ratio, min_y_ratio, max_z_ratio, max_y_ratio, min_z_ratio, max_y_ratio];
+
+            var uvsEdge3 = [min_z_ratio, min_x_ratio, max_z_ratio, min_x_ratio, max_z_ratio, max_x_ratio, min_z_ratio, max_x_ratio];
+        
+            // Using these two lines of code for uvsEdge1 and uvsEdge3 will make the longitude and latitude slices be in the right
+            // orientation, but they will not cutoff correctly when the depth and max depth sliders are moved. I had a similar issue
+            // before that I was able to solve by rotating the original images, but trying to rotate the images this time that have 
+            // the altered vertical bias and scale does not seem to change how they are oriented in the CVM viewer.
+            //var uvsEdge1 = [max_z_ratio, min_y_ratio, min_z_ratio, min_y_ratio, min_z_ratio, max_y_ratio, max_z_ratio, max_y_ratio];
+            //var uvsEdge3 = [max_z_ratio, min_x_ratio, min_z_ratio, min_x_ratio, min_z_ratio, max_x_ratio, max_z_ratio, max_x_ratio];
+            
+            var geometry = new Cesium.Geometry({
+              attributes: {
+                  position: new Cesium.GeometryAttribute({
+                      componentDatatype: Cesium.ComponentDatatype.DOUBLE,
+                      componentsPerAttribute: 3,
+                      values: pos
+                  }),
+                  st: new Cesium.GeometryAttribute({
+                    componentDatatype: Cesium.ComponentDatatype.FLOAT,
+                    componentsPerAttribute: 2,
+                    values: uvs
+                  })
+              },
+              indices : indexs,
+              primitiveType: Cesium.PrimitiveType.TRIANGLES,
+              boundingSphere: Cesium.BoundingSphere.fromVertices(pos)
+            });
+
+            var geometryBot = new Cesium.Geometry({
+              attributes: {
+                  position: new Cesium.GeometryAttribute({
+                      componentDatatype: Cesium.ComponentDatatype.DOUBLE,
+                      componentsPerAttribute: 3,
+                      values: posBot
+                  }),
+                  st: new Cesium.GeometryAttribute({
+                    componentDatatype: Cesium.ComponentDatatype.FLOAT,
+                    componentsPerAttribute: 2,
+                    values: uvs
+                  })
+              },
+              indices : indexs,
+              primitiveType: Cesium.PrimitiveType.TRIANGLES,
+              boundingSphere: Cesium.BoundingSphere.fromVertices(posBot)
+            });
+
+
+            var geometryEdge1 = new Cesium.Geometry({
+              attributes: {
+                  position: new Cesium.GeometryAttribute({
+                      componentDatatype: Cesium.ComponentDatatype.DOUBLE,
+                      componentsPerAttribute: 3,
+                      values: posEdge1
+                  }),
+                  st: new Cesium.GeometryAttribute({
+                    componentDatatype: Cesium.ComponentDatatype.FLOAT,
+                    componentsPerAttribute: 2,
+                    values: uvsEdge1
+                  })
+              },
+              indices : indexs,
+              primitiveType: Cesium.PrimitiveType.TRIANGLES,
+              boundingSphere: Cesium.BoundingSphere.fromVertices(posEdge1)
+            });
+            
+            var geometryEdge2 = new Cesium.Geometry({
+              attributes: {
+                  position: new Cesium.GeometryAttribute({
+                      componentDatatype: Cesium.ComponentDatatype.DOUBLE,
+                      componentsPerAttribute: 3,
+                      values: posEdge2
+                  }),
+                  st: new Cesium.GeometryAttribute({
+                    componentDatatype: Cesium.ComponentDatatype.FLOAT,
+                    componentsPerAttribute: 2,
+                    values: uvsEdge1
+                  })
+              },
+              indices : indexs,
+              primitiveType: Cesium.PrimitiveType.TRIANGLES,
+              boundingSphere: Cesium.BoundingSphere.fromVertices(posEdge2)
+            });
+
+            var geometryEdge3 = new Cesium.Geometry({
+              attributes: {
+                  position: new Cesium.GeometryAttribute({
+                      componentDatatype: Cesium.ComponentDatatype.DOUBLE,
+                      componentsPerAttribute: 3,
+                      values: posEdge3
+                  }),
+                  st: new Cesium.GeometryAttribute({
+                    componentDatatype: Cesium.ComponentDatatype.FLOAT,
+                    componentsPerAttribute: 2,
+                    values: uvsEdge3
+                  })
+              },
+              indices : indexs,
+              primitiveType: Cesium.PrimitiveType.TRIANGLES,
+              boundingSphere: Cesium.BoundingSphere.fromVertices(posEdge3)
+            });
+
+            var geometryEdge4 = new Cesium.Geometry({
+              attributes: {
+                  position: new Cesium.GeometryAttribute({
+                      componentDatatype: Cesium.ComponentDatatype.DOUBLE,
+                      componentsPerAttribute: 3,
+                      values: posEdge4
+                  }),
+                  st: new Cesium.GeometryAttribute({
+                    componentDatatype: Cesium.ComponentDatatype.FLOAT,
+                    componentsPerAttribute: 2,
+                    values: uvsEdge3
+                  })
+              },
+              indices : indexs,
+              primitiveType: Cesium.PrimitiveType.TRIANGLES,
+              boundingSphere: Cesium.BoundingSphere.fromVertices(posEdge4)
+            });
+
+            var myInstance = new Cesium.GeometryInstance({
+                geometry: geometry,
+                attributes: {
+                    color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
+                }
+            });
+            var myInstanceBot = new Cesium.GeometryInstance({
+                geometry: geometryBot,
+                attributes: {
+                    color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
+                }
+            });
+            var myInstanceEdge1 = new Cesium.GeometryInstance({
+                geometry: geometryEdge1,
+                attributes: {
+                    color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
+                }
+            });
+            var myInstanceEdge2 = new Cesium.GeometryInstance({
+                geometry: geometryEdge2,
+                attributes: {
+                    color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
+                }
+            });
+            var myInstanceEdge3 = new Cesium.GeometryInstance({
+                geometry: geometryEdge3,
+                attributes: {
+                    color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
+                }
+            });
+            var myInstanceEdge4 = new Cesium.GeometryInstance({
+                geometry: geometryEdge4,
+                attributes: {
+                    color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
+                }
+            });
+            const alphaSliderVal = document.getElementById('alphaSlider');
+            
+            try {
+                var fetchedImg;
+                topMaterial = new Cesium.Material({
+                  fabric : {
+                      type : 'MyCustomMap',
+                      uniforms : {
+                          image : '',
+                          color : new Cesium.Color(1.0, 0.0, 0.0, alphaSliderVal.value)
+                      },
+                      components : {
+                          emission : 'texture(image, materialInput.st).rgb',
+                          alpha : 'texture(image, materialInput.st).a * color.a'
+                      }
+                    },
+                    translucent: true
+                });
+                boxEntityTop = viewer.scene.primitives.add(new Cesium.Primitive({
+                    geometryInstances: myInstance,
+
+                    id: 'boxEntity',
+
+                    appearance: new Cesium.MaterialAppearance({
+                        material : topMaterial,
+                    }),
+                    asynchronous: false,
+                }));
+                if (boxEntityTop) {
+                    boxEntityTop.show = false; // Hide the primitive temporarily
+                }
+                viewer.allowDataSourcesToSuspendAnimation = true;
+                // I tried to use a promise to try to force it to load the image before displaying it
+                new Promise((resolve, reject) => {
+                Cesium.Resource.fetchImage({url: textureImg}).then((image) => {
+                    topMaterial.uniforms.image = image;
+                    viewer.scene.requestRender();
+                    // Show the primitive again after it's fully updated
+                    boxEntityTop.show = true;
+                    resolve('Texture loaded and applied');
+                })
+                .catch((error) => {
+                    console.error('Error loading texture:', error);
+                    reject(error); // Propagate error if loading fails
+                });
+                });
+            } catch (error) {
+                // Handle errors
+                console.log(`There was an error while creating the top slice primitive. ${error}`);
+            }
+            // I tried to use Cesium.Resource.fetchImage before creating the boxEntityTop to see
+            // if that would load the image before it tried to render it.
+            /*
+            var fetchedImg;
+            Cesium.Resource.fetchImage({url: textureImg}).then(function(image) {
+                //texture.copyFrom(image);
+                fetchedImg = image;
+                boxEntityTop = viewer.scene.primitives.add(new Cesium.Primitive({
+                    geometryInstances: myInstance,
+
+                    id: 'boxEntity',
+
+                    appearance: new Cesium.MaterialAppearance({
+                        material : new Cesium.Material({
+                          fabric : {
+                              type : 'MyCustomMap',
+                              uniforms : {
+                                  image : fetchedImg,
+                                  color : new Cesium.Color(1.0, 0.0, 0.0, alphaSliderVal.value)
+                              },
+                              components : {
+                                  emission : 'texture(image, materialInput.st).rgb',
+                                  alpha : 'texture(image, materialInput.st).a * color.a'
+                              }
+                            },
+                            translucent: true
+                        }),
+                    }),
+                    asynchronous: false,
+                }));
+            }).catch(function(error) {
+                console.log(`There was an error while creating the top slice primitive. ${error}`);
+            });
+            */
+            // I tried to use Cesium.Resource.fetchImage before creating the material for the boxEntityTop to see
+            // if that would load the image before it tried to render it.
+            /*
+            // Use Cesium.Resource.fetchImage to load the image
+            Cesium.Resource.fetchImage(textureImg)
+                .then((loadedImage) => {
+                    // Create a custom material with the loaded image
+                    /*
+                    const material = new Cesium.Material({
+                        fabric: {
+                            type: "Image",
+                            uniforms: {
+                                image: loadedImage
+                            }
+                        }
+                    });
+                    */
+                    /*
+                    topMaterial = new Cesium.Material({
+                        fabric : {
+                            type : 'MyCustomMap',
+                            uniforms : {
+                                image : loadedImage,
+                                color : new Cesium.Color(1.0, 0.0, 0.0, alphaSliderVal.value)
+                            },
+                            components : {
+                                emission : 'texture(image, materialInput.st).rgb',
+                                alpha : 'texture(image, materialInput.st).a * color.a'
+                            }
+                         },
+                         translucent: true
+                    });
+
+                    if (boxEntityTop !== null) {
+                        viewer.scene.primitives.remove(boxEntityTop);
+                        //boxEntityTop.appearance.material.uniforms.image = loadedImage;
+                    } //else {
+                    */
+                    // Create a primitive with a custom geometry
+                    /*
+                    const primitive = new Cesium.Primitive({
+                        geometryInstances: new Cesium.GeometryInstance({
+                            geometry: new Cesium.RectangleGeometry({
+                                rectangle: Cesium.Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0),
+                                vertexFormat: Cesium.MaterialAppearance.VERTEX_FORMAT
+                            })
+                        }),
+                        appearance: new Cesium.MaterialAppearance({
+                            material: material,
+                        })
+                    });
+                    */
+                    /*
+                    boxEntityTop = new Cesium.Primitive({
+                        geometryInstances: myInstance,
+
+                        id: 'boxEntity',
+
+                        appearance: new Cesium.MaterialAppearance({
+                            material : topMaterial,
+                        }),
+                        asynchronous: false,
+                    });
+
+                    //boxEntityTop.appearance.material.uniforms.image = loadedImage;
+
+                    // Add the primitive to the scene
+                    viewer.scene.primitives.add(boxEntityTop);
+                    //}
+                })
+                .catch((error) => {
+                    console.error("Failed to load the image:", error);
+                });
+            */
+
+            // My original code to create the boxEntityTop before I was trying to fix the
+            // flickering issue. It also includes the code for creating all of the other
+            // sides of the bounding box, but I chose to only show the boxEntityTop right
+            // now while I have been working on this issue with the slice rendering before
+            // the image has loaded.
+            /* 
+            boxEntityTop = viewer.scene.primitives.add(new Cesium.Primitive({
+                geometryInstances: myInstance,
+
+                id: 'boxEntity',
+
+                appearance: new Cesium.MaterialAppearance({
+                    material : new Cesium.Material({
+                      fabric : {
+                          type : 'MyCustomMap',
+                          uniforms : {
+                              image : fetchedImg,
+                              color : new Cesium.Color(1.0, 0.0, 0.0, alphaSliderVal.value)
+                          },
+                          components : {
+                              emission : 'texture(image, materialInput.st).rgb',
+                              alpha : 'texture(image, materialInput.st).a * color.a'
+                          }
+                        },
+                        translucent: true
+                    }),
+                }),
+                asynchronous: false,
+            }));
+            */
+            
+            
+            boxEntityBottom = viewer.scene.primitives.add(new Cesium.Primitive({
+                geometryInstances: myInstanceBot,
+
+                id: 'boxEntityBot',
+
+                appearance: new Cesium.MaterialAppearance({
+                    material : new Cesium.Material({
+                      fabric : {
+                          type : 'MyCustomMap2',
+                          uniforms : {
+                              image : textureImgBot,
+                              color : new Cesium.Color(1.0, 0.0, 0.0, alphaSliderVal.value)
+                          },
+                          components : {
+                              emission : 'texture(image, materialInput.st).rgb',
+                              alpha : 'texture(image, materialInput.st).a * color.a'
+                          }
+                        },
+                        translucent: true
+                    }),
+                }),
+                asynchronous: false,
+            }));
+            
+            boxEntityEdge1 = viewer.scene.primitives.add(new Cesium.Primitive({
+                geometryInstances: myInstanceEdge1,
+
+                id: 'boxEntityEdg1',
+
+                appearance: new Cesium.MaterialAppearance({
+                    material : new Cesium.Material({
+                      fabric : {
+                          type : 'MyCustomMap3',
+                          uniforms : {
+                              image : textureImgEdge1,
+                              color : new Cesium.Color(1.0, 0.0, 0.0, alphaSliderVal.value)
+                          },
+                          components : {
+                              emission : 'texture(image, materialInput.st).rgb',
+                              alpha : 'texture(image, materialInput.st).a * color.a'
+                          }
+                        },
+                        translucent: true
+                    }),
+                }),
+                asynchronous: false,
+            }));
+
+            boxEntityEdge2 = viewer.scene.primitives.add(new Cesium.Primitive({
+                geometryInstances: myInstanceEdge2,
+
+                id: 'boxEntityEdg2',
+
+                appearance: new Cesium.MaterialAppearance({
+                    material : new Cesium.Material({
+                      fabric : {
+                          type : 'MyCustomMap4',
+                          uniforms : {
+                              image : textureImgEdge2,
+                              color : new Cesium.Color(1.0, 0.0, 0.0, alphaSliderVal.value)
+                          },
+                          components : {
+                              emission : 'texture(image, materialInput.st).rgb',
+                              alpha : 'texture(image, materialInput.st).a * color.a'
+                          }
+                        },
+                        translucent: true
+                    }),
+                }),
+                asynchronous: false,
+            }));
+
+            boxEntityEdge3 = viewer.scene.primitives.add(new Cesium.Primitive({
+                geometryInstances: myInstanceEdge3,
+
+                id: 'boxEntityEdg3',
+
+                appearance: new Cesium.MaterialAppearance({
+                    material : new Cesium.Material({
+                      fabric : {
+                          type : 'MyCustomMap5',
+                          uniforms : {
+                              image : textureImgEdge3,
+                              color : new Cesium.Color(1.0, 0.0, 0.0, alphaSliderVal.value)
+                          },
+                          components : {
+                              emission : 'texture(image, materialInput.st).rgb',
+                              alpha : 'texture(image, materialInput.st).a * color.a'
+                          }
+                        },
+                        translucent: true
+                    }),
+                }),
+                asynchronous: false,
+            }));
+
+            boxEntityEdge4 = viewer.scene.primitives.add(new Cesium.Primitive({
+                geometryInstances: myInstanceEdge4,
+
+                id: 'boxEntityEdg4',
+
+                appearance: new Cesium.MaterialAppearance({
+                    material : new Cesium.Material({
+                      fabric : {
+                          type : 'MyCustomMap6',
+                          uniforms : {
+                              image : textureImgEdge4,
+                              color : new Cesium.Color(1.0, 0.0, 0.0, alphaSliderVal.value)
+                          },
+                          components : {
+                              emission : 'texture(image, materialInput.st).rgb',
+                              alpha : 'texture(image, materialInput.st).a * color.a'
+                          }
+                        },
+                        translucent: true
+                    }),
+                }),
+                asynchronous: false,
+            }));
+            
+
+            viewer.scene.globe.depthTestAgainstTerrain = false;
+            viewer.scene.globe.allowPicking = false;
+            
+
+        }
+
+        function updateSlidersFromDropdown() {
+            console.log("Calling updateSlidersFromDropdown");
+            const coords = document.getElementById('data-file').value;
+            if (coords) {
+                console.log("coords:", coords); 
+                const limits = coords.replace(/[()]/g, '').split(',');
+                const minLonSlider = document.getElementById('minLonSlider');
+                const maxLonSlider = document.getElementById('maxLonSlider');
+                const minLatSlider = document.getElementById('minLatSlider');
+                const maxLatSlider = document.getElementById('maxLatSlider');
+                const minDepthSlider = document.getElementById('minDepthSlider');
+                const maxDepthSlider = document.getElementById('maxDepthSlider');
+
+                minLonSlider.min = parseFloat(limits[0]);
+                minLonSlider.max = parseFloat(limits[1]);
+                minLonSlider.value = parseFloat(limits[0]);
+                document.getElementById('minLonValue').textContent = minLonSlider.value;
+
+                maxLonSlider.min = parseFloat(limits[0]);
+                maxLonSlider.max = parseFloat(limits[1]);
+                maxLonSlider.value = parseFloat(limits[1]);
+                document.getElementById('maxLonValue').textContent = maxLonSlider.value;
+
+                minLatSlider.min = parseFloat(limits[2]);
+                minLatSlider.max = parseFloat(limits[3]);
+                minLatSlider.value = parseFloat(limits[2]);
+                document.getElementById('minLatValue').textContent = minLatSlider.value;
+
+                maxLatSlider.min = parseFloat(limits[2]);
+                maxLatSlider.max = parseFloat(limits[3]);
+                maxLatSlider.value = parseFloat(limits[3]);
+                document.getElementById('maxLatValue').textContent = maxLatSlider.value;
+
+                minDepthSlider.min = parseFloat(limits[4]);
+                minDepthSlider.max = parseFloat(limits[5]);
+                minDepthSlider.value = parseFloat(limits[4]);
+                document.getElementById('minDepthValue').textContent = minDepthSlider.value;
+
+                maxDepthSlider.min = parseFloat(limits[4]);
+                maxDepthSlider.max = parseFloat(limits[5]);
+                maxDepthSlider.value = parseFloat(limits[5]);
+                document.getElementById('maxDepthValue').textContent = maxDepthSlider.value;
+	        
+
+                updateBoxOutline(parseFloat(minLatSlider.value), parseFloat(maxLatSlider.value), parseFloat(minLonSlider.value), parseFloat(maxLonSlider.value), parseFloat(minDepthSlider.value), parseFloat(maxDepthSlider.value), parseFloat(document.getElementById('alphaSlider').value));
+            } else {
+                if (boxEntityTop) {
+                    viewer.scene.primitives.remove(boxEntityTop);
+                    boxEntityTop = null;
+                }
+                if (boxEntityBottom) {
+                    viewer.scene.primitives.remove(boxEntityBottom);
+                    boxEntityBottom = null;
+                }
+                if (boxEntityEdge1) {
+                    viewer.scene.primitives.remove(boxEntityEdge1);
+                    boxEntityEdge1 = null;
+                }
+                if (boxEntityEdge2) {
+                    viewer.scene.primitives.remove(boxEntityEdge2);
+                    boxEntityEdge2 = null;
+                }
+                if (boxEntityEdge3) {
+                    viewer.scene.primitives.remove(boxEntityEdge3);
+                    boxEntityEdge3 = null;
+                }
+                if (boxEntityEdge4) {
+                    viewer.scene.primitives.remove(boxEntityEdge4);
+                    boxEntityEdge4 = null;
+                }
+            }
+        }
+
+
+        // Event listeners for the sliders
+        document.getElementById('minLatSlider').addEventListener('input', function () {
+            document.getElementById('minLatValue').textContent = this.value;
+            updateBoxOutline(parseFloat(this.value), parseFloat(document.getElementById('maxLatSlider').value), parseFloat(document.getElementById('minLonSlider').value), parseFloat(document.getElementById('maxLonSlider').value), parseFloat(document.getElementById('minDepthSlider').value), parseFloat(document.getElementById('maxDepthSlider').value), parseFloat(document.getElementById('alphaSlider').value));
+        });
+
+        document.getElementById('maxLatSlider').addEventListener('input', function () {
+            document.getElementById('maxLatValue').textContent = this.value;
+            updateBoxOutline(parseFloat(document.getElementById('minLatSlider').value), parseFloat(this.value), parseFloat(document.getElementById('minLonSlider').value), parseFloat(document.getElementById('maxLonSlider').value), parseFloat(document.getElementById('minDepthSlider').value), parseFloat(document.getElementById('maxDepthSlider').value), parseFloat(document.getElementById('alphaSlider').value));
+        });
+
+        document.getElementById('minLonSlider').addEventListener('input', function () {
+            document.getElementById('minLonValue').textContent = this.value;
+            updateBoxOutline(parseFloat(document.getElementById('minLatSlider').value), parseFloat(document.getElementById('maxLatSlider').value), parseFloat(this.value), parseFloat(document.getElementById('maxLonSlider').value), parseFloat(document.getElementById('minDepthSlider').value), parseFloat(document.getElementById('maxDepthSlider').value), parseFloat(document.getElementById('alphaSlider').value));
+        });
+
+        document.getElementById('maxLonSlider').addEventListener('input', function () {
+            document.getElementById('maxLonValue').textContent = this.value;
+            updateBoxOutline(parseFloat(document.getElementById('minLatSlider').value), parseFloat(document.getElementById('maxLatSlider').value), parseFloat(document.getElementById('minLonSlider').value), parseFloat(this.value), parseFloat(document.getElementById('minDepthSlider').value), parseFloat(document.getElementById('maxDepthSlider').value), parseFloat(document.getElementById('alphaSlider').value));
+        });
+
+        document.getElementById('minDepthSlider').addEventListener('input', function () {
+            document.getElementById('minDepthValue').textContent = this.value;
+            updateBoxOutline(parseFloat(document.getElementById('minLatSlider').value), parseFloat(document.getElementById('maxLatSlider').value), parseFloat(document.getElementById('minLonSlider').value), parseFloat(document.getElementById('maxLonSlider').value), parseFloat(this.value), parseFloat(document.getElementById('maxDepthSlider').value), parseFloat(document.getElementById('alphaSlider').value));
+        });
+
+        document.getElementById('maxDepthSlider').addEventListener('input', function () {
+            document.getElementById('maxDepthValue').textContent = this.value;
+            updateBoxOutline(parseFloat(document.getElementById('minLatSlider').value), parseFloat(document.getElementById('maxLatSlider').value), parseFloat(document.getElementById('minLonSlider').value), parseFloat(document.getElementById('maxLonSlider').value), parseFloat(document.getElementById('minDepthSlider').value), parseFloat(this.value), parseFloat(document.getElementById('alphaSlider').value));
+        });
+        document.getElementById('alphaSlider').addEventListener('input', function () {
+            document.getElementById('alphaValue').textContent = this.value;
+            // This line has a bug in it and should instead look like the next line of code
+            //updateBoxOutline(parseFloat(document.getElementById('minLatSlider').value), parseFloat(document.getElementById('maxLatSlider').value), parseFloat(document.getElementById('minLonSlider').value), parseFloat(document.getElementById('maxLonSlider').value), parseFloat(document.getElementById('minDepthSlider').value), parseFloat(this.value), parseFloat(document.getElementById('alphaSlider').value));
+            updateBoxOutline(parseFloat(document.getElementById('minLatSlider').value), parseFloat(document.getElementById('maxLatSlider').value), parseFloat(document.getElementById('minLonSlider').value), parseFloat(document.getElementById('maxLonSlider').value), parseFloat(document.getElementById('minDepthSlider').value), parseFloat(document.getElementById('maxDepthSlider').value), parseFloat(this.value));
+        });
+
+        document.getElementById('data-file').addEventListener('change', updateSlidersFromDropdown);
+
+        // Load initial dropdown and update sliders
+        loadDropdown();
+
+        var points = [];
+        var distanceDisplay = document.getElementById('distanceDisplay');
+        var clearButton = document.getElementById('clearButton');
+
+        function calculateDistance(point1, point2) {
+            return Cesium.Cartesian3.distance(point1, point2);
+        }
+
+        function updateDistanceDisplay(distance) {
+            distanceDisplay.textContent = 'Distance: ' + distance.toFixed(2) + ' meters';
+        }
+
+
+        function clearDistance() {
+            points = [];
+            distanceDisplay.textContent = '';
+            viewer.entities.removeAll();
+        }
+
+        var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+        handler.setInputAction(function (click) {
+            var cartesian = viewer.camera.pickEllipsoid(click.position, viewer.scene.globe.ellipsoid);
+            if (cartesian) {
+                if (document.getElementById('clearCheckbox').checked) {
+                    points.push(cartesian);
+                }
+                if (points.length >= 2) {
+                    var distance = calculateDistance(points[points.length - 2], points[points.length - 1]);
+                    updateDistanceDisplay(distance);
+                    viewer.entities.add({
+                        polyline: {
+                            positions: points,
+                            width: 2,
+                            material: Cesium.Color.TEAL
+                        }
+                    });
+                }
+            }
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+        document.getElementById('clearCheckbox').addEventListener('change', function () {
+            if (!this.checked) {
+                clearDistance();
+            }
+        });
+
+        document.getElementById('toggleGlobeCheckbox').addEventListener('change', function () {
+            viewer.scene.globe.show = this.checked;
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            var toggleSubductionCheckbox = document.getElementById('toggleSubductionCheckbox');
+            var subductionDataSource;
+
+            function handleSubductionData(checked) {
+                if (checked) {
+                    Cesium.GeoJsonDataSource.load(auxData[0], {
+                        stroke: auxColor[0],
+                        strokeWidth: auxLineWidth[0],
+                        fill: auxColor[0].withAlpha(auxFillOpacity[0])
+                    }).then(function (dataSource) {
+                        subductionDataSource = dataSource;
+                        viewer.dataSources.add(dataSource);
+                    }).catch(function (error) {
+                        console.error('Error loading GeoJSON:', error);
+                    });
+                } else {
+                    if (viewer.dataSources.contains(subductionDataSource)) {
+                        viewer.dataSources.remove(subductionDataSource);
+                    }
+                }
+            }
+
+            toggleSubductionCheckbox.addEventListener('change', function () {
+                handleSubductionData(this.checked);
+            });
+
+            handleSubductionData(toggleSubductionCheckbox.checked);
+        });
+    </script>
+</body>
+
+</html>

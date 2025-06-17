@@ -1,0 +1,22 @@
+{
+    "model": "SVI_EQTOMO_Savard2018",
+    "geospatial_lon_min": -126.0,
+    "geospatial_lon_max": -121.1,
+    "geospatial_lat_min": 47.0,
+    "geospatial_lat_max": 50.9,
+    "geospatial_vertical_min": 0.0,
+    "geospatial_vertical_max": 93.0,
+    "geospatial_vertical_units": "km",
+    "num_images": 10,
+    "dir_name": "/static/images/SVI_EQTOMO_Savard2018_images2/",
+    "img_stem": "SVI_EQTOMO_screenshot_y_axis",
+    "min_per": 46,
+    "lon_axis_num_images": 59,
+    "lon_axis_dir_name": "/static/images/SVI_EQTOMO_Savard2018_images2/",
+    "lon_axis_img_stem": "SVI_EQTOMO_screenshot_x_axis",
+    "lon_axis_min_per": 22,
+    "lat_axis_num_images": 58,
+    "lat_axis_dir_name": "/static/images/SVI_EQTOMO_Savard2018_images2/",
+    "lat_axis_img_stem": "SVI_EQTOMO_screenshot_z_axis",
+    "lat_axis_min_per": 22
+}

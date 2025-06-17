@@ -1,0 +1,110 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+.header {
+    background-color: #004F59;
+    color: #fff;
+    padding: 10px 20px;
+}
+
+.menu {
+    background-color: #f4f4f4;
+    padding: 10px 20px;
+}
+
+
+.main-container {
+    display: flex;
+}
+
+.left-panel {
+    flex: 1;
+    padding: 10px;
+}
+
+.right-panel {
+    flex: 2;
+    padding: 10px;
+}
+
+#fileListPanel,
+#contentPanel {
+    width: 40%;
+    height: 900px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin: 5px;
+    float: left;
+}
+
+#fileListPanel {
+    clear: both;
+}
+
+
+#leftPanel,
+#contentPanel {
+    width: 55%;
+    height: 900px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin: 5px;
+    float: left;
+}
+
+#leftPanel {
+    clear: both;
+}
+
+#map {
+    width: 100%;
+    height: calc(50% - 5px);
+    /* Adjusted height for the map */
+}
+
+#jsonContent {
+    font-size: 10px;
+    width: 100%;
+    height: calc(50% - 5px);
+    /* Adjusted height for the JSON content */
+    white-space: pre-wrap;
+    overflow-y: auto;
+    margin-top: 5px;
+    /* Add margin to separate from the map */
+}
+
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+th,
+td {
+    padding: 8px;
+    text-align: left;
+}
+
+tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+.hidden {
+    display: none;
+}
+
+.json-container {
+    font-family: Arial, sans-serif;
+    padding: 10px;
+    border-left: 3px solid #ccc;
+    margin: 5px;
+}
+
+.json-container b {
+    color: darkblue;
+}
