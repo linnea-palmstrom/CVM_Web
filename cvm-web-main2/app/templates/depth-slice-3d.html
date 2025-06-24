@@ -193,6 +193,15 @@
                 <select id="data-file" name="data_file"></select>
             </div>
             <div>&nbsp;</div>
+            <!-- Dropdown for the variables associated with the selected data file -->
+            <div>
+                <label for="data-vars">Variable:</label>
+                <select id="data-vars" name="data_vars">
+                    <option value="vs">vs</option>
+                    <option value="rho">rho</option>
+                </select>
+            </div>
+            <div>&nbsp;</div>
             <div class="sliderContainer">
                 <label class="sliderLabel">Min Latitude: <input type="range" id="minLatSlider" min="47" max="50.9"
                         step="0.1" value="47"></label>
@@ -218,16 +227,17 @@
                         value="0"></label>
                 <span id="minDepthValue">0</span>
             </div>
-            <div id="toggleDiagSlice">
-                <label>
-                    <input type="checkbox" id="toggleDiagSliceCheckbox">Diagonal Slice
-                </label>
-            </div>
-            <div class="sliderContainer">
-                <label class="sliderLabel">Diagonal Slice (%): <input type="range" id="diagSlider" min="0" max="100" step="1"
-                        value="0"></label>
-                <span id="diagValue">0</span>
-            </div>
+            <!-- I tried implementing a diagonal slice toggle and slider, but I have not been able to get it working yet -->
+            <!--div id="toggleDiagSlice"-->
+                <!--label-->
+                    <!--input type="checkbox" id="toggleDiagSliceCheckbox">Diagonal Slice-->
+                <!--/label-->
+            <!--/div-->
+            <!--div class="sliderContainer"-->
+                <!--label class="sliderLabel">Diagonal Slice (%): <input type="range" id="diagSlider" min="0" max="100" step="1"
+                        value="0"--><!--/label-->
+                <!--span id="diagValue">0</span-->
+            <!--/div-->
 
             <!-- Change the maxDepthSlider so it appears on the webpage which allows me to add the other sides of the bounding box to the globe -->
             <!--div class="sliderContainer" style="display: none;"-->
@@ -366,10 +376,9 @@
         var boxEntityEdge2;
         var boxEntityEdge3;
         var boxEntityEdge4;
-        var boxEntityDiag;
+        //var boxEntityDiag;
 
         async function loadDropdown() {
-            console.log("Calling loadDropdown");
             try {
                 const response = await fetch('/models_drop_down');
                 if (response.ok) {
@@ -383,6 +392,7 @@
                 console.error('Error fetching dropdown:', error);
                 document.getElementById('data-file').textContent = 'Error loading dropdown.';
             }
+
         }
 
         //select an option from a <select> menu based on the option’s text
@@ -413,7 +423,6 @@
 
             // Function to send the current form data to the parent
             function syncToParent() {
-                console.log("Calling syncToParent");
                 const formData = new FormData(iframeForm);
                 const data = {};
                 formData.forEach((value, key) => {
@@ -431,28 +440,20 @@
                 if (event.origin !== window.location.origin) {
                     return; // Ignore messages from other origins for security
                 }
-                //alert(event.data.type)
                 if (event.data.type === 'syncFromParent') {
-                    //alert("HERE")
                     function copyIframeFormValues() {
-                        console.log("Calling copyIframeFormValues");
                         const data = event.data.data;
 
                         // The model selection update.
                         selectOptionByText(data['data-file'])
 
                         // Sliders update.
-                        document.getElementById('minLonSlider').value = ['start-lng'];
+                        document.getElementById('minLonSlider').value = data['start-lng'];
                         document.getElementById('maxLonSlider').value = data['end-lng'];
                         document.getElementById('minLatSlider').value = data['start-lat'];
                         document.getElementById('maxLatSlider').value = data['end-lat'];
                         document.getElementById('minDepthSlider').value = data['start-depth'];
                         
-                        console.log("[start-lng]:", ['start-lng']);
-                        console.log("data[end-lng]:", data['end-lng']);
-                        console.log("data[start-lat]:", data['start-lat']);
-                        console.log("data[end-lat]:", data['end-lat']);
-                        console.log("data[start-depth]:", data['start-depth']);
 
                         // Slider labels update.
                         document.getElementById('minLonValue').textContent = data['start-lng'];
@@ -464,7 +465,6 @@
                         // Update the outline box.
                         updateBoxOutline(parseFloat(minLatSlider.value), parseFloat(maxLatSlider.value), parseFloat(minLonSlider.value), parseFloat(maxLonSlider.value), parseFloat(minDepthSlider.value), parseFloat(maxDepthSlider.value), parseFloat(document.getElementById('alphaSlider').value));
 
-                        // document.getElementById('end-depth').value = iframeDoc.getElementById('maxDepthSlider').value;
 
                     }
                     copyIframeFormValues();
@@ -472,7 +472,6 @@
                 }
 
                 if (event.data.type === 'requestSyncToParent') {
-                    console.log("Run syncToParent");
                     syncToParent();
                 }
             });
@@ -636,16 +635,17 @@
             legendItem.appendChild(legendLabel);
             auxLegendContainer.appendChild(legendItem);
         });
-
+        
+        // Update the options given in the data-file and data-vars dropdown menus
+        // when the webpage is first loaded.
         async function loadDropdown() {
-            console.log("Calling loadDropdown");
+            // Try to update the data-file dropdown options based on what is in the 
+            // http://0.0.0.0:8000/models_drop_down_coverage page
             try {
                 const response = await fetch('/models_drop_down_coverage');
-                console.log("response:", response);
                 if (response.ok) {
                     const dropdownHTML = await response.text();
                     document.getElementById('data-file').innerHTML = dropdownHTML;
-                    console.log("data-file:", document.getElementById('data-file'));
                     // Initialize sliders based on the first dropdown option
                     updateSlidersFromDropdown();
                 } else {
@@ -656,28 +656,135 @@
                 console.error('Error fetching dropdown:', error);
                 document.getElementById('data-file').textContent = 'Error loading dropdown.';
             }
+            // Try to update the data-vars dropdown options based on what is in the 
+            // http://0.0.0.0:8000/vis/models_drop_down page and which file was selected
+            // in the data-file dropdown menu
+            try {
+                const response_var = await fetch('/vis/models_drop_down');
+                if (response_var.ok) {
+                    const dropdownvarHTML = await response_var.text();
+                    var selected_data_set = document.getElementById('data-file').options[document.getElementById('data-file').selectedIndex].text;
+                    const dropdownvarHTML_list = dropdownvarHTML.split("<option ");
+
+                    const dropdown_models = [];
+                    const dropdown_variables = [];
+
+                    // Isolate the model names and their associated variables from the models
+                    // listed in http://0.0.0.0:8000/vis/models_drop_down and input each of them into an array
+                    for (var i = 0; i < dropdownvarHTML_list.length; i++) {
+                        if (dropdownvarHTML_list[i].length > 0) {
+                            const model = dropdownvarHTML_list[i].split(">")[1].replace("</option", "");
+                            const model_name = model.split(" ")[0];
+                            const model_vars = model.split(" ")[1];
+                            dropdown_models.push(model_name);
+                            dropdown_variables.push(model_vars);  
+                        }
+                    }
+
+                    // Get the array of variables that are associated with the model selected in the data-file dropdown
+                    let selected_data_set_vars = ['vs'];
+
+                    for (var i = 0; i < dropdown_models.length; i++) {
+                        if (dropdown_models[i] == selected_data_set) {
+                            selected_data_set_vars = dropdown_variables[i].replace("(", "").replace(")", "").split(",");
+                        }
+                    }
+
+                    // Add the HTML information back to the variable options
+                    for (var i = 0; i < selected_data_set_vars.length; i++) {
+                         selected_data_set_vars[i] = "<option value=\"" + selected_data_set_vars[i] + "\">" + selected_data_set_vars[i] + "</option>";
+                    }
+                    // Update the data-vars dropdown options        
+                    document.getElementById('data-vars').innerHTML = selected_data_set_vars.join(" ");
+                    // Initialize sliders based on the first dropdown option
+                    updateSlidersFromDropdown();
+                } else {
+                    console.error('Failed to load variable dropdown:', response_var.statusText);
+                    document.getElementById('data-vars').textContent = 'Failed to load variable dropdown.';
+                }
+            } catch (error) {
+                console.error('Error fetching variable dropdown:', error);
+                document.getElementById('data-vars').textContent = 'Error loading variable dropdown.';
+            }
+        }
+        // Update the options given in the data-vars dropdown menu after the webpage has finished
+        // loading for the first time (this function is called every time the selected model in the
+        // data-file dropdown menu changes).
+        async function loadVarDropdown() {
+            // Try to update the data-vars dropdown options based on what is in the 
+            // http://0.0.0.0:8000/vis/models_drop_down page and which file was selected
+            // in the data-file dropdown menu
+            try {
+                const response_var = await fetch('/vis/models_drop_down');
+                if (response_var.ok) {
+                    const dropdownvarHTML = await response_var.text();
+                    var selected_data_set = document.getElementById('data-file').options[document.getElementById('data-file').selectedIndex].text;
+                    const dropdownvarHTML_list = dropdownvarHTML.split("<option ");
+
+                    const dropdown_models = [];
+                    const dropdown_variables = [];
+
+                    // Isolate the model names and their associated variables from the models
+                    // listed in http://0.0.0.0:8000/vis/models_drop_down and input each of them into an array
+                    for (var i = 0; i < dropdownvarHTML_list.length; i++) {
+                        if (dropdownvarHTML_list[i].length > 0) {
+                            const model = dropdownvarHTML_list[i].split(">")[1].replace("</option", "");
+                            const model_name = model.split(" ")[0];
+                            const model_vars = model.split(" ")[1];
+                            dropdown_models.push(model_name);
+                            dropdown_variables.push(model_vars);  
+                        }
+                    }
+
+                    // Get the array of variables that are associated with the model selected in the data-file dropdown
+                    let selected_data_set_vars = ['vs'];
+
+                    for (var i = 0; i < dropdown_models.length; i++) {
+                        if (dropdown_models[i] == selected_data_set) {
+                            selected_data_set_vars = dropdown_variables[i].replace("(", "").replace(")", "").split(",");
+                        }
+                    }
+                            
+
+                    // Add the HTML information back to the variable options
+                    for (var i = 0; i < selected_data_set_vars.length; i++) {
+                         selected_data_set_vars[i] = "<option value=\"" + selected_data_set_vars[i] + "\">" + selected_data_set_vars[i] + "</option>";
+                    }
+
+                    // Update the data-vars dropdown options        
+                    document.getElementById('data-vars').innerHTML = selected_data_set_vars.join(" ");
+                    // Initialize sliders based on the first dropdown option
+                    updateSlidersFromDropdown();
+                } else {
+                    console.error('Failed to load variable dropdown:', response_var.statusText);
+                    document.getElementById('data-vars').textContent = 'Failed to load variable dropdown.';
+                }
+            } catch (error) {
+                console.error('Error fetching variable dropdown:', error);
+                document.getElementById('data-vars').textContent = 'Error loading variable dropdown.';
+            }
         }
 
         // Call loadDropdown when the page has finished loading
         document.addEventListener('DOMContentLoaded', loadDropdown);
 
-
-
+        // Function that updates the dimensions of each side of the bounding box and the slice images shown
         async function updateBoxOutline(minLat, maxLat, minLon, maxLon, minDepth, maxDepth, alpha) {
+            // Clear all items in localStorage for the current origin
+            localStorage.clear();
+
+            // Clear all items in sessionStorage for the current origin (session-specific)
+            sessionStorage.clear();
             // fetch the json file with the information about the group of slice images
-            //var jsonFile = '../static/json/LP3.json';
-            console.log("selected data-file index:", document.getElementById('data-file').selectedIndex);
-            console.log("selected data-file:", document.getElementById('data-file').options[document.getElementById('data-file').selectedIndex].text);
             var data_set = document.getElementById('data-file').options[document.getElementById('data-file').selectedIndex].text;
+            var data_var = document.getElementById('data-vars').options[document.getElementById('data-vars').selectedIndex].text;
             var jsonFile = '../static/json/LP4.json';
-            //var jsonFile = '';
+
             if (data_set == 'Cascadia_ANT+RF_Delph2018') {
                 jsonFile = '../static/json/LP4.json';
             } else if (data_set == 'SVI_EQTOMO_Savard2018') {
-                //jsonFile = '../static/json/LP5.json';
                 jsonFile = '../static/json/LP6.json';
-                console.log("Reading from the ", jsonFile, "file.");
-            } else {
+            } else {  // I plan to add the casc1.6_velmdl slices to the webpage later
                 console.log("The data set selected is not available");
             }
             var numImgs = 0;
@@ -692,11 +799,40 @@
             var latDirName = '';
             var latImgStem = '';
             var latMinPer = 0;
+            var jsonData = {};
 
-            response= await fetch(jsonFile);
-            data = await response.json();
+            // Try to read the json file
+            try {
+                const response = await fetch(jsonFile);
+                if (!response.ok) {
+                    throw new Error('Failed to load JSON: ${response.statusText}');
+                }
+                jsonData = await response.json();
+
+                // Extract JSON values or set them to default values (if they don't exist)
+                
+                numImgs = jsonData.num_images || 1;
+                dirName = jsonData.dir_name || '';
+                imgStem = jsonData.img_stem || '';
+                minPer = jsonData.min_per || 0;
+                lonNumImgs = jsonData.lon_axis_num_images || 1;
+                lonDirName = jsonData.lon_axis_dir_name || '';
+                lonImgStem = jsonData.lon_axis_img_stem || '';
+                lonMinPer = jsonData.lon_axis_min_per || 0;
+                latNumImgs = jsonData.lat_axis_num_images || 1;
+                latDirName = jsonData.lat_axis_dir_name || '';
+                latImgStem = jsonData.lat_axis_img_stem || '';
+                latMinPer = jsonData.lat_axis_min_per || 0;
+
+            } catch (e) {
+                console.error("Error processing JSON data:", e);
+                // If JSON data is critical and corrupted, prevent further rendering
+                return;
+            }
+
+
             // Assuming the JSON structure matches your form fields' ids
-            for (const [key, value] of Object.entries(data)) {
+            for (const [key, value] of Object.entries(jsonData)) {
                 if (key === "num_images") {
                     numImgs = value;
                 }
@@ -705,7 +841,6 @@
                 }
                 if (key === "img_stem") {
                     imgStem = value;
-                    console.log("imgStem: ", imgStem);
                 }
                 if (key === "min_per") {
                     minPer = value;
@@ -744,6 +879,7 @@
                 minLon, maxLat, minDepth * -1000,
             ]);
 
+
             // Coordinates for the four corners for the bottom side of the bounding box.
             var positionsBot = Cesium.Cartesian3.fromDegreesArrayHeights([
                 minLon, minLat, maxDepth * -1000,  // Longitude, Latitude, Height
@@ -752,6 +888,7 @@
                 minLon, maxLat, maxDepth * -1000,
             ]);
 
+
             // Coordinates for the four corners for the edge 1 of the bounding box.
             var positionsEdge1 = Cesium.Cartesian3.fromDegreesArrayHeights([
                 minLon, minLat, minDepth * -1000,  // Longitude, Latitude, Height
@@ -759,6 +896,8 @@
                 minLon, maxLat, maxDepth * -1000,
                 minLon, maxLat, minDepth * -1000,
             ]);
+
+
             // Coordinates for the four corners for the edge 2 of the bounding box.
             var positionsEdge2 = Cesium.Cartesian3.fromDegreesArrayHeights([
                 maxLon, minLat, minDepth * -1000,  // Longitude, Latitude, Height
@@ -766,6 +905,8 @@
                 maxLon, maxLat, maxDepth * -1000,
                 maxLon, maxLat, minDepth * -1000,
             ]);
+            
+
             // Coordinates for the four corners for the edge 3 of the bounding box.
             var positionsEdge3 = Cesium.Cartesian3.fromDegreesArrayHeights([
                 minLon, minLat, minDepth * -1000,  // Longitude, Latitude, Height
@@ -773,6 +914,8 @@
                 maxLon, minLat, maxDepth * -1000,
                 maxLon, minLat, minDepth * -1000,
             ]);
+
+
             // Coordinates for the four corners for the edge 4 of the bounding box.
             var positionsEdge4 = Cesium.Cartesian3.fromDegreesArrayHeights([
                 minLon, maxLat, minDepth * -1000,  // Longitude, Latitude, Height
@@ -781,6 +924,7 @@
                 maxLon, maxLat, minDepth * -1000,
             ]);
 
+            // Remove any previous primitives that were added to the scene from a previous call to updateBoxOutline
             if (boxEntityTop !== null) {
                 viewer.scene.primitives.remove(boxEntityTop);
             }
@@ -807,111 +951,124 @@
             const maxLonSliderTest = document.getElementById('maxLonSlider');
             const minLatSliderTest = document.getElementById('minLatSlider');
             const maxLatSliderTest = document.getElementById('maxLatSlider');
+            const alphaSliderVal = document.getElementById('alphaSlider');
 
-            const diagSliderTest = document.getElementById('diagSlider');
-            console.log("Diagonal Slider value: ", diagSliderTest.value);
-            console.log("Diagonal Slider min value: ", diagSliderTest.min);
-            console.log("Diagonal Slider max value: ", diagSliderTest.max);
+            // I was testing out my diagonal slider here to see if I could get it working
+            //const diagSliderTest = document.getElementById('diagSlider');
+            //console.log("Diagonal Slider value: ", diagSliderTest.value);
+            //console.log("Diagonal Slider min value: ", diagSliderTest.min);
+            //console.log("Diagonal Slider max value: ", diagSliderTest.max);
 
             
             var minDepthTest = minDepthSliderTest.min;
-            var maxDepthTest = minDepthSliderTest.max;
+            var maxDepthTest = maxDepthSliderTest.max;
             var minLonTest = minLonSliderTest.min;
-            var maxLonTest = minLonSliderTest.max;
+            var maxLonTest = maxLonSliderTest.max;
             var minLatTest = minLatSliderTest.min;
-            var maxLatTest = minLatSliderTest.max;
+            var maxLatTest = maxLatSliderTest.max;
 
             var depthDiff = minDepthSliderTest.value - minDepthTest;
             var depthRange = (maxDepthTest - minDepthTest) + 1;
 
-            
-            //function getImageName(stem, depth, minDepth, maxDepth, numImages) {
-            function getImageName(stem, minPer, depth, minDepth, maxDepth, numImages) {
+            // Function that takes in the stem of the image name, the minimum percentage slice
+            // in VisIt where the slice contains data (which corresponds to the lowest number 
+            // at the end of the file name in the sequence of y-axis slices), the current value
+            // of the depth slider, the minimum and maximum values of the depth slider, the 
+            // number of y-axis slice images and the variable selected in the data-vars dropdown
+            // to return part of the file path and image name for the image that will be used as the
+            // texture for the bounding box side
+            function getImageName(stem, minPer, depth, minDepth, maxDepth, numImages, varName) {
+
 	        var depthDiff = depth - minDepth;
                 var depthRange = (maxDepth - minDepth) + 1;
             
-                var depthImgsStep = (depthRange * 1.0)/numImages;
-                if (depthImgsStep == 0) {
+                let depthImgsStep;
+                if (numImages <= 1) { // If only one image or zero images, step is irrelevant, assume index 0/minPer
                     depthImgsStep = 1;
+                } else {
+                    depthImgsStep = (depthRange * 1.0) / (numImages);
+                    if (depthImgsStep === 0) { // If range is 0, but multiple images, step still 0, avoid division by zero
+                        depthImgsStep = 1; // Assume only first image relevant if no range
+                    }
                 }
-                var depthImgsIndx = Math.trunc(depthDiff/depthImgsStep);
-                var depthImgsIndx = minPer + Math.trunc(depthDiff/depthImgsStep);
+
+                var depthImgsIndx = minPer + Math.round(depthDiff/depthImgsStep);
+
+                // Clamp the index to valid bounds based on numImages and minPer
+                const maxValidIndex = minPer + numImages - 1;
         
-                if (depthImgsIndx < 0) {
-                    depthImgsIndx = 0;
+                if (depthImgsIndx < minPer) {
+                    depthImgsIndx = minPer;
+                } else if (depthImgsIndx > maxValidIndex) {
+                    depthImgsIndx = maxValidIndex;
                 }
-                //if (depthImgsIndx > numImages) {
-                    //depthImgsIndx = numImages - 1;
-                //}
-                if (depthImgsIndx > (numImages + minPer)) {
-                    depthImgsIndx = (numImages + minPer - 1);
-                }
-                return stem.concat(depthImgsIndx, ".png");
+
+                console.assert(Number.isInteger(depthImgsIndx) && depthImgsIndx >= 0, '[getImageName: ' + varName + '] Final index is not a valid non-negative integer!');
+
+                const texturePath = varName + '/' + varName + '_' + stem + depthImgsIndx + '.png';
+                return texturePath;
+
             }
-            //function getLonImageName(stem, lon, minLon, maxLon, numImages) {
-            function getLonImageName(stem, minPer, lon, minLon, maxLon, numImages) {
-	        var lonDiff = lon - minLon;
-                var lonRange = (maxLon - minLon);
+            // Function that takes in the stem of the image name, the minimum percentage slice
+            // in VisIt where the slice contains data (which corresponds to the lowest number 
+            // at the end of the file name in the sequence of x-axis or z-axis slices), the current value
+            // of the lat/lon slider, the minimum and maximum values of the lat/lon slider, the 
+            // number of x-axis or z-axis slice images and the variable selected in the data-vars dropdown
+            // to return part of the file path and image name for the image that will be used as the
+            // texture for the bounding box side
+            function getLonLatImageName(stem, minPer, value, minVal, maxVal, numImages, varName) {
+
+	        var valDiff = value - minVal;
+                var valRange = (maxVal - minVal);
             
-                var lonImgsStep = (lonRange * 1.0)/numImages;
-                if (lonImgsStep == 0) {
-                    lonImgsStep = 1;
+                let valImgsStep;
+                if (numImages <= 1) { // If only one image or zero images, step is irrelevant, assume index 0/minPer
+                    valImgsStep = 1;
+                } else {
+                    valImgsStep = (valRange * 1.0) / (numImages);
+                    if (valImgsStep === 0) { // If range is 0, but multiple images, step still 0, avoid division by zero
+                        valImgsStep = 1; // Assume only first image relevant if no range
+                    }
                 }
-                //var lonImgsIndx = Math.trunc(lonDiff/lonImgsStep);
-                var lonImgsIndx = minPer + Math.trunc(lonDiff/lonImgsStep);
+
+                var valImgsIndx = minPer + Math.round(valDiff/valImgsStep);
+
+                // Clamp the index to valid bounds based on numImages and minPer
+                const maxValidIndex = minPer + numImages - 1;
         
-                if (lonImgsIndx < 0) {
-                    lonImgsIndx = 0;
+                if (valImgsIndx < minPer) {
+                    valImgsIndx = minPer;
+                } else if (valImgsIndx > maxValidIndex) {
+                    valImgsIndx = maxValidIndex;
                 }
-                //if (lonImgsIndx >= numImages) {
-                    //lonImgsIndx = (numImages - 1);
-                //}
-                if (lonImgsIndx >= (numImages + minPer)) {
-                    lonImgsIndx = (numImages + minPer - 1);
-                }
-                return stem.concat(lonImgsIndx, ".png");
-            }
-            //function getLatImageName(stem, lat, minLat, maxLat, numImages) {
-            function getLatImageName(stem, minPer, lat, minLat, maxLat, numImages) {
-	        var latDiff = (lat - minLat);
-                var latRange = (maxLat - minLat);
-            
-                var latImgsStep = (latRange * 1.0)/numImages;
-                if (latImgsStep == 0) {
-                    latImgsStep = 1;
-                }
-                //var latImgsIndx = Math.trunc(latDiff/latImgsStep);
-                var latImgsIndx = minPer + Math.trunc(latDiff/latImgsStep);
-        
-                if (latImgsIndx < 0) {
-                    latImgsIndx = 0;
-                }
-                //if (latImgsIndx >= numImages) {
-                    //latImgsIndx = (numImages - 1);
-                //}
-                if (latImgsIndx >= (numImages + minPer)) {
-                    latImgsIndx = (numImages + minPer - 1);
-                }
-                return stem.concat(latImgsIndx, ".png");
+
+                console.assert(Number.isInteger(valImgsIndx) && valImgsIndx >= 0, '[getLonLatImageName: ' + varName + '] Final index is not a valid non-negative integer!');
+
+                const texturePath = varName + '/' + varName + '_' + stem + valImgsIndx + '.png';
+                return texturePath;
+
             }
 
-            //var textureImg = dirName.concat(getImageName(imgStem, minDepthSliderTest.value, minDepthTest, maxDepthTest, numImgs));
-            var textureImg = dirName.concat(getImageName(imgStem, minPer, minDepthSliderTest.value, minDepthTest, maxDepthTest, numImgs));
+            minDepthTest = parseFloat(minDepthTest);
+            maxDepthTest = parseFloat(maxDepthTest);
+            minLonTest = parseFloat(minLonTest);
+            maxLonTest = parseFloat(maxLonTest);
+            minLatTest = parseFloat(minLatTest);
+            maxLatTest = parseFloat(maxLatTest);
+
+            // Get the file paths and slice image names for the images that will be used as textures for all six sides of the bounding box
+            var textureImg = dirName.concat(getImageName(imgStem, minPer, parseFloat(minDepthSliderTest.value), minDepthTest, maxDepthTest, numImgs, data_var));
             
-            //var textureImgBot = dirName.concat(getImageName(imgStem, maxDepthSliderTest.value, minDepthTest, maxDepthTest, numImgs));
-            var textureImgBot = dirName.concat(getImageName(imgStem, minPer, maxDepthSliderTest.value, minDepthTest, maxDepthTest, numImgs));
-            //var textureImgEdge1 = lonDirName.concat(getLonImageName(imgStem, minLonSliderTest.value, minLonTest, maxLonTest, lonNumImgs));
-            var textureImgEdge1 = lonDirName.concat(getLonImageName(lonImgStem, lonMinPer, minLonSliderTest.value, minLonTest, maxLonTest, lonNumImgs));
-            //var textureImgEdge2 = lonDirName.concat(getLonImageName(imgStem, maxLonSliderTest.value, minLonTest, maxLonTest, lonNumImgs));
-            var textureImgEdge2 = lonDirName.concat(getLonImageName(lonImgStem, lonMinPer, maxLonSliderTest.value, minLonTest, maxLonTest, lonNumImgs));
-            //var textureImgEdge3 = latDirName.concat(getLatImageName(latImgStem, minLatSliderTest.value, minLatTest, maxLatTest, latNumImgs));
-            var textureImgEdge3 = latDirName.concat(getLatImageName(latImgStem, latMinPer, minLatSliderTest.value, minLatTest, maxLatTest, latNumImgs));
-            //var textureImgEdge4 = latDirName.concat(getLatImageName(latImgStem, maxLatSliderTest.value, minLatTest, maxLatTest, latNumImgs));
-            var textureImgEdge4 = latDirName.concat(getLatImageName(latImgStem, latMinPer, maxLatSliderTest.value, minLatTest, maxLatTest, latNumImgs));
-            console.log("Lat image:", textureImgEdge3);
-            console.log("Max Lat image:", textureImgEdge4);
-            console.log("Lon image:", textureImgEdge1);
-            console.log("Max Lon image:", textureImgEdge2);
+            var textureImgBot = dirName.concat(getImageName(imgStem, minPer, parseFloat(maxDepthSliderTest.value), minDepthTest, maxDepthTest, numImgs, data_var));
+
+            var textureImgEdge1 = lonDirName.concat(getLonLatImageName(lonImgStem, lonMinPer, parseFloat(minLonSliderTest.value), minLonTest, maxLonTest, lonNumImgs, data_var));
+
+            var textureImgEdge2 = lonDirName.concat(getLonLatImageName(lonImgStem, lonMinPer, parseFloat(maxLonSliderTest.value), minLonTest, maxLonTest, lonNumImgs, data_var));
+
+            var textureImgEdge3 = latDirName.concat(getLonLatImageName(latImgStem, latMinPer, parseFloat(minLatSliderTest.value), minLatTest, maxLatTest, latNumImgs, data_var));
+
+            var textureImgEdge4 = latDirName.concat(getLonLatImageName(latImgStem, latMinPer, parseFloat(maxLatSliderTest.value), minLatTest, maxLatTest, latNumImgs, data_var));
+
 
             var numPositions = 4;
             var pos = new Float64Array(numPositions * 3);
@@ -952,6 +1109,8 @@
                           posEdge4[i * 3 + 1] = positionsEdge4[i].y;
                           posEdge4[i * 3 + 2] = positionsEdge4[i].z;
                       }
+
+            // Calculate the UV coordinates to determine how the images should be mapped to the sides of the bounding box
             var min_x_ratio = (minLon - minLonSliderTest.min)/(maxLonSliderTest.max - minLonSliderTest.min);
             var max_x_ratio = (maxLon - maxLonSliderTest.min)/(maxLonSliderTest.max - minLonSliderTest.min);
             var min_y_ratio = (minLat - minLatSliderTest.min)/(maxLatSliderTest.max - minLatSliderTest.min);
@@ -964,13 +1123,7 @@
 
             var uvsEdge3 = [min_z_ratio, min_x_ratio, max_z_ratio, min_x_ratio, max_z_ratio, max_x_ratio, min_z_ratio, max_x_ratio];
         
-            // Using these two lines of code for uvsEdge1 and uvsEdge3 will make the longitude and latitude slices be in the right
-            // orientation, but they will not cutoff correctly when the depth and max depth sliders are moved. I had a similar issue
-            // before that I was able to solve by rotating the original images, but trying to rotate the images this time that have 
-            // the altered vertical bias and scale does not seem to change how they are oriented in the CVM viewer.
-            //var uvsEdge1 = [max_z_ratio, min_y_ratio, min_z_ratio, min_y_ratio, min_z_ratio, max_y_ratio, max_z_ratio, max_y_ratio];
-            //var uvsEdge3 = [max_z_ratio, min_x_ratio, min_z_ratio, min_x_ratio, min_z_ratio, max_x_ratio, max_z_ratio, max_x_ratio];
-            
+            // Create the geometry for each of the six primitives (one for each bounding box side)
             var geometry = new Cesium.Geometry({
               attributes: {
                   position: new Cesium.GeometryAttribute({
@@ -1080,6 +1233,7 @@
               boundingSphere: Cesium.BoundingSphere.fromVertices(posEdge4)
             });
 
+            // Create the geometry instances for each bounding box side
             var myInstance = new Cesium.GeometryInstance({
                 geometry: geometry,
                 attributes: {
@@ -1116,9 +1270,9 @@
                     color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
                 }
             });
-            const alphaSliderVal = document.getElementById('alphaSlider');
-            
+   
             try {
+                // Create the Cesium material for the mimimum depth slice bounding box side
                 var fetchedImg;
                 topMaterial = new Cesium.Material({
                   fabric : {
@@ -1134,6 +1288,8 @@
                     },
                     translucent: true
                 });
+
+                // Add the minimum depth slice primitive/side to the scene
                 boxEntityTop = viewer.scene.primitives.add(new Cesium.Primitive({
                     geometryInstances: myInstance,
 
@@ -1142,8 +1298,10 @@
                     appearance: new Cesium.MaterialAppearance({
                         material : topMaterial,
                     }),
-                    asynchronous: false,
+                    //asynchronous: false,
+                    asynchronous: true,
                 }));
+
                 if (boxEntityTop) {
                     boxEntityTop.show = false; // Hide the primitive temporarily
                 }
@@ -1166,9 +1324,17 @@
                 // Handle errors
                 console.log(`There was an error while creating the top slice primitive. ${error}`);
             }
+
             // I tried to use Cesium.Resource.fetchImage before creating the boxEntityTop to see
             // if that would load the image before it tried to render it.
             /*
+
+            console.log("Start");
+            setTimeout(() => {
+                console.log("Executed after 1 seconds");
+            }, 1000); // 1000 milliseconds = 1 seconds
+
+            console.log("End"); // This will log before the setTimeout callback
             var fetchedImg;
             Cesium.Resource.fetchImage({url: textureImg}).then(function(image) {
                 //texture.copyFrom(image);
@@ -1273,13 +1439,11 @@
                 .catch((error) => {
                     console.error("Failed to load the image:", error);
                 });
+
             */
 
             // My original code to create the boxEntityTop before I was trying to fix the
-            // flickering issue. It also includes the code for creating all of the other
-            // sides of the bounding box, but I chose to only show the boxEntityTop right
-            // now while I have been working on this issue with the slice rendering before
-            // the image has loaded.
+            // flickering issue.
             /* 
             boxEntityTop = viewer.scene.primitives.add(new Cesium.Primitive({
                 geometryInstances: myInstance,
@@ -1306,7 +1470,7 @@
             }));
             */
             
-            
+            // Add the other five primitives/sides to the scene
             boxEntityBottom = viewer.scene.primitives.add(new Cesium.Primitive({
                 geometryInstances: myInstanceBot,
 
@@ -1328,9 +1492,9 @@
                         translucent: true
                     }),
                 }),
-                asynchronous: false,
+                //asynchronous: false,
+                asynchronous: true,
             }));
-            
             boxEntityEdge1 = viewer.scene.primitives.add(new Cesium.Primitive({
                 geometryInstances: myInstanceEdge1,
 
@@ -1352,9 +1516,9 @@
                         translucent: true
                     }),
                 }),
-                asynchronous: false,
+                //asynchronous: false,
+                asynchronous: true,
             }));
-
             boxEntityEdge2 = viewer.scene.primitives.add(new Cesium.Primitive({
                 geometryInstances: myInstanceEdge2,
 
@@ -1376,9 +1540,9 @@
                         translucent: true
                     }),
                 }),
-                asynchronous: false,
+                //asynchronous: false,
+                asynchronous: true,
             }));
-
             boxEntityEdge3 = viewer.scene.primitives.add(new Cesium.Primitive({
                 geometryInstances: myInstanceEdge3,
 
@@ -1400,9 +1564,9 @@
                         translucent: true
                     }),
                 }),
-                asynchronous: false,
+                //asynchronous: false,
+                asynchronous: true,
             }));
-
             boxEntityEdge4 = viewer.scene.primitives.add(new Cesium.Primitive({
                 geometryInstances: myInstanceEdge4,
 
@@ -1424,21 +1588,18 @@
                         translucent: true
                     }),
                 }),
-                asynchronous: false,
+                //asynchronous: false,
+                asynchronous: true,
             }));
             
-
             viewer.scene.globe.depthTestAgainstTerrain = false;
             viewer.scene.globe.allowPicking = false;
-            
 
         }
 
         function updateSlidersFromDropdown() {
-            console.log("Calling updateSlidersFromDropdown");
             const coords = document.getElementById('data-file').value;
             if (coords) {
-                console.log("coords:", coords); 
                 const limits = coords.replace(/[()]/g, '').split(',');
                 const minLonSlider = document.getElementById('minLonSlider');
                 const maxLonSlider = document.getElementById('maxLonSlider');
@@ -1507,7 +1668,6 @@
             }
         }
 
-
         // Event listeners for the sliders
         document.getElementById('minLatSlider').addEventListener('input', function () {
             document.getElementById('minLatValue').textContent = this.value;
@@ -1546,6 +1706,22 @@
         });
 
         document.getElementById('data-file').addEventListener('change', updateSlidersFromDropdown);
+        // Update the data-vars dropdown options when the model selected from the data-file dropdown changes
+        document.getElementById('data-file').addEventListener('change', loadVarDropdown);
+
+        // Update the box outline when the selected variable in the data-vars dropdown changes
+        document.getElementById('data-vars').addEventListener('change', function() {
+            const minLat = parseFloat(document.getElementById('minLatSlider').value);
+            const maxLat = parseFloat(document.getElementById('maxLatSlider').value);
+            const minLon = parseFloat(document.getElementById('minLonSlider').value);
+            const maxLon = parseFloat(document.getElementById('maxLonSlider').value);
+            const minDepth = parseFloat(document.getElementById('minDepthSlider').value);
+            const maxDepth = parseFloat(document.getElementById('maxDepthSlider').value);
+            const alpha = parseFloat(document.getElementById('alphaSlider').value);
+
+            // Call updateBoxOutline with the current slider values
+            updateBoxOutline(minLat, maxLat, minLon, maxLon, minDepth, maxDepth, alpha);
+        });
 
         // Load initial dropdown and update sliders
         loadDropdown();

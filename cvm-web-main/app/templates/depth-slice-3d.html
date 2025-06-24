@@ -231,16 +231,6 @@
                         value="0.3"></label>
                 <span id="alphaValue">0.3</span>
             </div>
-            <div id="toggleDiagonalSlice">
-                <label>
-                    <input type="checkbox" id="toggleDiagonalSliceCheckbox" checked> Diagonal Slice
-                </label>
-            </div>
-            <div class="sliderContainer">
-                <label class="sliderLabel">Diagonal Slice Position (%): <input type="range" id="diagonalSlider" min="0" max="100" step="1"
-                        value="0"></label>
-                <span id="diagonalValue">0</span>
-            </div>
             <button type="button" class="button" id="sync-to-parent">Sync to Form</button>
         </form>
 
@@ -368,9 +358,9 @@
         var boxEntityEdge4;
 
         async function loadDropdown() {
+            console.log("Calling loadDropdown");
             try {
                 const response = await fetch('/models_drop_down');
-                console.log("response:", response);
                 if (response.ok) {
                     const dropdownHTML = await response.text();
                     document.getElementById('data-file').innerHTML = dropdownHTML;
@@ -412,6 +402,7 @@
 
             // Function to send the current form data to the parent
             function syncToParent() {
+                console.log("Calling syncToParent");
                 const formData = new FormData(iframeForm);
                 const data = {};
                 formData.forEach((value, key) => {
@@ -432,13 +423,12 @@
                 //alert(event.data.type)
                 if (event.data.type === 'syncFromParent') {
                     //alert("HERE")
-                    console.log("Sync From Parent:");
                     function copyIframeFormValues() {
+                        console.log("Calling copyIframeFormValues");
                         const data = event.data.data;
 
                         // The model selection update.
                         selectOptionByText(data['data-file'])
-                        console.log("Data File:", data['data-file']);
 
                         // Sliders update.
                         document.getElementById('minLonSlider').value = ['start-lng'];
@@ -446,7 +436,12 @@
                         document.getElementById('minLatSlider').value = data['start-lat'];
                         document.getElementById('maxLatSlider').value = data['end-lat'];
                         document.getElementById('minDepthSlider').value = data['start-depth'];
-
+                        
+                        console.log("[start-lng]:", ['start-lng']);
+                        console.log("data[end-lng]:", data['end-lng']);
+                        console.log("data[start-lat]:", data['start-lat']);
+                        console.log("data[end-lat]:", data['end-lat']);
+                        console.log("data[start-depth]:", data['start-depth']);
 
                         // Slider labels update.
                         document.getElementById('minLonValue').textContent = data['start-lng'];
@@ -456,14 +451,7 @@
                         document.getElementById('minDepthValue').textContent = data['start-depth'];
 
                         // Update the outline box.
-                        //updateBoxOutline(parseFloat(minLatSlider.value), parseFloat(maxLatSlider.value), parseFloat(minLonSlider.value), parseFloat(maxLonSlider.value), parseFloat(minDepthSlider.value), parseFloat(maxDepthSlider.value), parseFloat(document.getElementById('alphaSlider').value));
-                        updateBoxOutline(parseFloat(minLatSlider.value), parseFloat(maxLatSlider.value), parseFloat(minLonSlider.value), parseFloat(maxLonSlider.value), parseFloat(minDepthSlider.value), parseFloat(maxDepthSlider.value), parseFloat(document.getElementById('alphaSlider').value), parseFloat(document.getElementById('diagonalSlider').value));
-                         
-                        console.log("Calling Update Box Outline:");
-                        console.log("Lat Min:", minLatSlider.value);
-                        console.log("Lon Min:", minLonSlider.value);
-                        console.log("Lat Max:", maxLatSlider.value);
-                        console.log("Lon Max:", maxLonSlider.value);
+                        updateBoxOutline(parseFloat(minLatSlider.value), parseFloat(maxLatSlider.value), parseFloat(minLonSlider.value), parseFloat(maxLonSlider.value), parseFloat(minDepthSlider.value), parseFloat(maxDepthSlider.value), parseFloat(document.getElementById('alphaSlider').value));
 
                         // document.getElementById('end-depth').value = iframeDoc.getElementById('maxDepthSlider').value;
 
@@ -473,14 +461,13 @@
                 }
 
                 if (event.data.type === 'requestSyncToParent') {
+                    console.log("Run syncToParent");
                     syncToParent();
-                    console.log("Requesting Sync To Parent");
                 }
             });
 
             // Sync to parent button
             document.getElementById('sync-to-parent').addEventListener('click', syncToParent);
-            console.log("Syncing To Parent");
         });
 
 
@@ -488,7 +475,6 @@
         // Call loadDropdown when the page has finished loading
         document.addEventListener('DOMContentLoaded', loadDropdown);
 
-        console.log("Load Dropdown");
 
         for (var i = 0; i < data.length; i++) {
             (function (index) {
@@ -499,7 +485,6 @@
                     strokeWidth: lineWidth[index],
                     markerSymbol: '?'
                 });
-                console.log("Data Source Label:", label[index]);
                 dataSource.then(function (dataSource) {
                     var entitiesToRemove = [];
                     dataSource.entities.values.forEach(function (entity) {
@@ -517,13 +502,11 @@
                                 coordinates.forEach(function (coordinate) {
                                     Cesium.Cartographic.fromCartesian(coordinate);
                                 });
-                                //console.log("Polygon coordinates:", coordinates);
                             } else if (Cesium.defined(entity.polyline)) {
                                 var positions = entity.polyline.positions.getValue();
                                 positions.forEach(function (position) {
                                     Cesium.Cartographic.fromCartesian(position);
                                 });
-                                //console.log("Polyline positions:", positions);
                             }
                             var description = '';
                             var properties = entity.properties;
@@ -644,15 +627,16 @@
         });
 
         async function loadDropdown() {
-            console.log("Inside loadDropdown");
+            console.log("Calling loadDropdown");
             try {
                 const response = await fetch('/models_drop_down_coverage');
+                console.log("response:", response);
                 if (response.ok) {
                     const dropdownHTML = await response.text();
                     document.getElementById('data-file').innerHTML = dropdownHTML;
+                    console.log("data-file:", document.getElementById('data-file'));
                     // Initialize sliders based on the first dropdown option
                     updateSlidersFromDropdown();
-                    console.log("Updated Sliders From Dropdown");
                 } else {
                     console.error('Failed to load dropdown:', response.statusText);
                     document.getElementById('data-file').textContent = 'Failed to load dropdown.';
@@ -668,70 +652,22 @@
 
 
 
-        //async function updateBoxOutline(minLat, maxLat, minLon, maxLon, minDepth, maxDepth, alpha) {
-        async function updateBoxOutline(minLat, maxLat, minLon, maxLon, minDepth, maxDepth, alpha, diagonal = 0) {
-            console.log("Inside UpdateBoxOutline function");
+        async function updateBoxOutline(minLat, maxLat, minLon, maxLon, minDepth, maxDepth, alpha) {
             // fetch the json file with the information about the group of slice images
-            var jsonFile = '../static/json/LP4.json';
+            var jsonFile = '../static/json/LP3.json';
             var numImgs = 0;
             var dirName = '';
             var imgStem = '';
-            var minPer = 0;
             var lonNumImgs = 0;
             var lonDirName = '';
             var lonImgStem = '';
-            var lonMinPer = 0;
             var latNumImgs = 0;
             var latDirName = '';
             var latImgStem = '';
-            var latMinPer = 0;
-            var diagMin = 0;
-            var diagMax = 0;
-
-            console.log("minLat:", minLat);
-            console.log("maxLat:", maxLat);
-            console.log("minLon:", minLon);
-            console.log("maxLon:", maxLon);
-            console.log("minDepth:", minDepth);
-            console.log("maxDepth:", maxDepth);
-            console.log("alpha:", alpha);
-            console.log("diagonal:", diagonal);
-
-            console.log("Json File:", jsonFile);
             response= await fetch(jsonFile);
             data = await response.json();
             // Assuming the JSON structure matches your form fields' ids
             for (const [key, value] of Object.entries(data)) {
-                if (key === "model") {
-                    console.log("Model:", value);
-                }
-                if (key === "geospatial_lon_min") {
-                    console.log("geospatial_lon_min:", value);
-                }
-                if (key === "geospatial_lon_max") {
-                    console.log("geospatial_lon_max:", value);
-                }
-                if (key === "geospatial_lat_min") {
-                    console.log("geospatial_lat_min:", value);
-                }
-                if (key === "geospatial_lat_max") {
-                    console.log("geospatial_lat_max:", value);
-                }
-                if (key === "geospatial_vertical_min") {
-                    console.log("geospatial_vertical_min:", value);
-                }
-                if (key === "geospatial_vertical_max") {
-                    console.log("geospatial_vertical_max:", value);
-                }
-                if (key === "geospatial_vertical_units") {
-                    console.log("geospatial_vertical_units:", value);
-                }
-                if (key === "diagonal_min") {
-                    diagMin = value;
-                }
-                if (key === "diagonal_max") {
-                    diagMax = value;
-                }
                 if (key === "num_images") {
                     numImgs = value;
                 }
@@ -741,20 +677,11 @@
                 if (key === "img_stem") {
                     imgStem = value;
                 }
-                if (key === "min_per") {
-                    minPer = value;
-                }
                 if (key === "lon_axis_num_images") {
                     lonNumImgs = value;
                 }
                 if (key === "lon_axis_dir_name") {
                     lonDirName = value;
-                }
-                if (key === "lon_axis_img_stem") {
-                    lonImgStem = value;
-                }
-                if (key === "lon_axis_min_per") {
-                    lonMinPer = value;
                 }
                 if (key === "lat_axis_num_images") {
                     latNumImgs = value;
@@ -765,28 +692,7 @@
                 if (key === "lat_axis_img_stem") {
                     latImgStem = value;
                 }
-                if (key === "lat_axis_min_per") {
-                    latMinPer = value;
-                }
             }
-            console.log("Lon directory:", lonDirName);
-            console.log("Lon minimum percent slice:", lonMinPer);
-
-            console.log("Values After Reading the Json File:");
-            console.log("Diagonal Percent Min:", diagMin);
-            console.log("Diagonal Percent Max:", diagMax);
-            console.log("Number of Images:", numImgs);
-            console.log("Directory Name:", dirName);
-            console.log("Image Stem:", imgStem);
-            console.log("Depth Minimum Percent Slice:", minPer);
-            console.log("Longitude Number of Images:", lonNumImgs);
-            console.log("Longitude Directory:", lonDirName);
-            console.log("Longitude Image Stem:", lonImgStem);
-            console.log("Longitude minimum percent slice:", lonMinPer);
-            console.log("Latitude Number of Images:", latNumImgs);
-            console.log("Latitude Directory:", latDirName);
-            console.log("Latitude Image Stem:", latImgStem);
-            console.log("Latitude minimum percent slice:", latMinPer);
 
             // Coordinates for the four corners.
             var positions = Cesium.Cartesian3.fromDegreesArrayHeights([
@@ -866,20 +772,12 @@
             var maxLonTest = minLonSliderTest.max;
             var minLatTest = minLatSliderTest.min;
             var maxLatTest = minLatSliderTest.max;
-            
-            console.log("minDepthSlider min:", minDepthTest);
-            console.log("minDepthSlider max:", maxDepthTest);
-            console.log("minLonSlider min:", minLonTest);
-            console.log("minLonSlider max:", maxLonTest);
-            console.log("minLatSlider min:", minLatTest);
-            console.log("minLatSlider max:", maxLatTest);
 
             var depthDiff = minDepthSliderTest.value - minDepthTest;
             var depthRange = (maxDepthTest - minDepthTest) + 1;
 
             
-            //function getImageName(stem, depth, minDepth, maxDepth, numImages) {
-            function getImageName(stem, minPer, depth, minDepth, maxDepth, numImages) {
+            function getImageName(stem, depth, minDepth, maxDepth, numImages) {
 	        var depthDiff = depth - minDepth;
                 var depthRange = (maxDepth - minDepth) + 1;
             
@@ -887,47 +785,35 @@
                 if (depthImgsStep == 0) {
                     depthImgsStep = 1;
                 }
-                //var depthImgsIndx = Math.trunc(depthDiff/depthImgsStep);
-                var depthImgsIndx = minPer + Math.trunc(depthDiff/depthImgsStep);
+                var depthImgsIndx = Math.trunc(depthDiff/depthImgsStep);
         
                 if (depthImgsIndx < 0) {
                     depthImgsIndx = 0;
                 }
-                //if (depthImgsIndx > numImages) {
-                    //depthImgsIndx = numImages - 1;
-                //}
-                if (depthImgsIndx > (numImages + minPer)) {
-                    depthImgsIndx = (numImages + minPer - 1);
+                if (depthImgsIndx > numImages) {
+                    depthImgsIndx = numImages - 1;
                 }
                 return stem.concat(depthImgsIndx, ".png");
             }
-            //function getLonImageName(stem, lon, minLon, maxLon, numImages) {
-            function getLonImageName(stem, minPer, lon, minLon, maxLon, numImages) {
+            function getLonImageName(stem, lon, minLon, maxLon, numImages) {
 	        var lonDiff = lon - minLon;
                 var lonRange = (maxLon - minLon);
-	        
-                //var lonDiffPer = 100 * lonDiff/lonRange;
             
                 var lonImgsStep = (lonRange * 1.0)/numImages;
                 if (lonImgsStep == 0) {
                     lonImgsStep = 1;
                 }
-                var lonImgsIndx = minPer + Math.trunc(lonDiff/lonImgsStep);
-                //var lonImgsIndx = Math.trunc(lonDiffPer/lonImgsStep);
+                var lonImgsIndx = Math.trunc(lonDiff/lonImgsStep);
         
                 if (lonImgsIndx < 0) {
                     lonImgsIndx = 0;
                 }
-                //if (lonImgsIndx >= numImages) {
-                    //lonImgsIndx = (numImages - 1);
-                //}
-                if (lonImgsIndx >= (numImages + minPer)) {
-                    lonImgsIndx = (numImages + minPer - 1);
+                if (lonImgsIndx >= numImages) {
+                    lonImgsIndx = (numImages - 1);
                 }
                 return stem.concat(lonImgsIndx, ".png");
             }
-            //function getLatImageName(stem, lat, minLat, maxLat, numImages) {
-            function getLatImageName(stem, minPer, lat, minLat, maxLat, numImages) {
+            function getLatImageName(stem, lat, minLat, maxLat, numImages) {
 	        var latDiff = (lat - minLat);
                 var latRange = (maxLat - minLat);
             
@@ -935,43 +821,28 @@
                 if (latImgsStep == 0) {
                     latImgsStep = 1;
                 }
-                //var latImgsIndx = Math.trunc(latDiff/latImgsStep);
-                var latImgsIndx = minPer + Math.trunc(latDiff/latImgsStep);
+                var latImgsIndx = Math.trunc(latDiff/latImgsStep);
         
                 if (latImgsIndx < 0) {
                     latImgsIndx = 0;
                 }
-                //if (latImgsIndx >= numImages) {
-                    //latImgsIndx = (numImages - 1);
-                //}
-                if (latImgsIndx >= (numImages + minPer)) {
-                    latImgsIndx = (numImages + minPer - 1);
+                if (latImgsIndx >= numImages) {
+                    latImgsIndx = (numImages - 1);
                 }
                 return stem.concat(latImgsIndx, ".png");
             }
-            //var textureImg = dirName.concat(getImageName(imgStem, minDepthSliderTest.value, minDepthTest, maxDepthTest, numImgs));
-            
-            //var textureImgBot = dirName.concat(getImageName(imgStem, maxDepthSliderTest.value, minDepthTest, maxDepthTest, numImgs));
-            //var textureImgEdge1 = lonDirName.concat(getLonImageName(lonImgStem, minLonSliderTest.value, minLonTest, maxLonTest, lonNumImgs));
-            //var textureImgEdge2 = lonDirName.concat(getLonImageName(lonImgStem, maxLonSliderTest.value, minLonTest, maxLonTest, lonNumImgs));
-            //var textureImgEdge3 = latDirName.concat(getLatImageName(latImgStem, minLatSliderTest.value, minLatTest, maxLatTest, latNumImgs));
-            //var textureImgEdge4 = latDirName.concat(getLatImageName(latImgStem, maxLatSliderTest.value, minLatTest, maxLatTest, latNumImgs));
 
-            var textureImg = dirName.concat(getImageName(imgStem, minPer, minDepthSliderTest.value, minDepthTest, maxDepthTest, numImgs));
+            var textureImg = dirName.concat(getImageName(imgStem, minDepthSliderTest.value, minDepthTest, maxDepthTest, numImgs));
             
-            var textureImgBot = dirName.concat(getImageName(imgStem, minPer, maxDepthSliderTest.value, minDepthTest, maxDepthTest, numImgs));
-            var textureImgEdge1 = lonDirName.concat(getLonImageName(lonImgStem, lonMinPer, minLonSliderTest.value, minLonTest, maxLonTest, lonNumImgs));
-            var textureImgEdge2 = lonDirName.concat(getLonImageName(lonImgStem, lonMinPer, maxLonSliderTest.value, minLonTest, maxLonTest, lonNumImgs));
-            var textureImgEdge3 = latDirName.concat(getLatImageName(latImgStem, latMinPer, minLatSliderTest.value, minLatTest, maxLatTest, latNumImgs));
-            var textureImgEdge4 = latDirName.concat(getLatImageName(latImgStem, latMinPer, maxLatSliderTest.value, minLatTest, maxLatTest, latNumImgs));
+            var textureImgBot = dirName.concat(getImageName(imgStem, maxDepthSliderTest.value, minDepthTest, maxDepthTest, numImgs));
+            var textureImgEdge1 = lonDirName.concat(getLonImageName(imgStem, minLonSliderTest.value, minLonTest, maxLonTest, lonNumImgs));
+            var textureImgEdge2 = lonDirName.concat(getLonImageName(imgStem, maxLonSliderTest.value, minLonTest, maxLonTest, lonNumImgs));
+            var textureImgEdge3 = latDirName.concat(getLatImageName(latImgStem, minLatSliderTest.value, minLatTest, maxLatTest, latNumImgs));
+            var textureImgEdge4 = latDirName.concat(getLatImageName(latImgStem, maxLatSliderTest.value, minLatTest, maxLatTest, latNumImgs));
             console.log("Lat image:", textureImgEdge3);
             console.log("Max Lat image:", textureImgEdge4);
             console.log("Lon image:", textureImgEdge1);
             console.log("Max Lon image:", textureImgEdge2);
-            console.log("Depth image:", textureImg);
-            console.log("Max Depth image:", textureImgBot);
-            console.log("Lat:", minLatSliderTest.value);
-            console.log("Lat Max:", maxLatSliderTest.value);
 
             var numPositions = 4;
             var pos = new Float64Array(numPositions * 3);
@@ -1177,7 +1048,6 @@
                 }
             });
             const alphaSliderVal = document.getElementById('alphaSlider');
-            console.log("alphaSliderVal:", alphaSliderVal);
             
             try {
                 var fetchedImg;
@@ -1365,7 +1235,7 @@
                 }),
                 asynchronous: false,
             }));
-            */
+            
             
             boxEntityBottom = viewer.scene.primitives.add(new Cesium.Primitive({
                 geometryInstances: myInstanceBot,
@@ -1486,7 +1356,7 @@
                 }),
                 asynchronous: false,
             }));
-            
+            */
 
             viewer.scene.globe.depthTestAgainstTerrain = false;
             viewer.scene.globe.allowPicking = false;
@@ -1495,9 +1365,10 @@
         }
 
         function updateSlidersFromDropdown() {
-            console.log("Inside updateSlidersFromDropdown");
+            console.log("Calling updateSlidersFromDropdown");
             const coords = document.getElementById('data-file').value;
             if (coords) {
+                console.log("coords:", coords); 
                 const limits = coords.replace(/[()]/g, '').split(',');
                 const minLonSlider = document.getElementById('minLonSlider');
                 const maxLonSlider = document.getElementById('maxLonSlider');
@@ -1510,40 +1381,32 @@
                 minLonSlider.max = parseFloat(limits[1]);
                 minLonSlider.value = parseFloat(limits[0]);
                 document.getElementById('minLonValue').textContent = minLonSlider.value;
-                console.log("minLonSlider.value:", minLonSlider.value);
 
                 maxLonSlider.min = parseFloat(limits[0]);
                 maxLonSlider.max = parseFloat(limits[1]);
                 maxLonSlider.value = parseFloat(limits[1]);
                 document.getElementById('maxLonValue').textContent = maxLonSlider.value;
-                console.log("maxLonSlider.value:", maxLonSlider.value);
 
                 minLatSlider.min = parseFloat(limits[2]);
                 minLatSlider.max = parseFloat(limits[3]);
                 minLatSlider.value = parseFloat(limits[2]);
                 document.getElementById('minLatValue').textContent = minLatSlider.value;
-                console.log("minLatSlider.value:", minLatSlider.value);
 
                 maxLatSlider.min = parseFloat(limits[2]);
                 maxLatSlider.max = parseFloat(limits[3]);
                 maxLatSlider.value = parseFloat(limits[3]);
                 document.getElementById('maxLatValue').textContent = maxLatSlider.value;
-                console.log("maxLatSlider.value:", maxLatSlider.value);
 
                 minDepthSlider.min = parseFloat(limits[4]);
                 minDepthSlider.max = parseFloat(limits[5]);
                 minDepthSlider.value = parseFloat(limits[4]);
                 document.getElementById('minDepthValue').textContent = minDepthSlider.value;
-                console.log("minDepthSlider.value:", minDepthSlider.value);
 
                 maxDepthSlider.min = parseFloat(limits[4]);
                 maxDepthSlider.max = parseFloat(limits[5]);
                 maxDepthSlider.value = parseFloat(limits[5]);
                 document.getElementById('maxDepthValue').textContent = maxDepthSlider.value;
-                console.log("maxDepthSlider.value:", maxDepthSlider.value);
 	        
-                
-                console.log("Call UpdateBoxOutline 2");
 
                 updateBoxOutline(parseFloat(minLatSlider.value), parseFloat(maxLatSlider.value), parseFloat(minLonSlider.value), parseFloat(maxLonSlider.value), parseFloat(minDepthSlider.value), parseFloat(maxDepthSlider.value), parseFloat(document.getElementById('alphaSlider').value));
             } else {
@@ -1576,98 +1439,45 @@
 
 
         // Event listeners for the sliders
-        console.log("minLatSlider event listener");
         document.getElementById('minLatSlider').addEventListener('input', function () {
-            console.log("minLatSlider value:", this.value);
-            console.log("maxLatSlider value:", document.getElementById('maxLatSlider').value);
-            console.log("minLonSlider value:", document.getElementById('minLonSlider').value);
-            console.log("maxLonSlider value:", document.getElementById('maxLonSlider').value);
-            console.log("minDepthSlider value:", document.getElementById('minDepthSlider').value);
-            console.log("maxDepthSlider value:", document.getElementById('maxDepthSlider').value);
             document.getElementById('minLatValue').textContent = this.value;
             updateBoxOutline(parseFloat(this.value), parseFloat(document.getElementById('maxLatSlider').value), parseFloat(document.getElementById('minLonSlider').value), parseFloat(document.getElementById('maxLonSlider').value), parseFloat(document.getElementById('minDepthSlider').value), parseFloat(document.getElementById('maxDepthSlider').value), parseFloat(document.getElementById('alphaSlider').value));
         });
 
-        console.log("maxLatSlider event listener");
         document.getElementById('maxLatSlider').addEventListener('input', function () {
-            console.log("minLatSlider value:", document.getElementById('minLatSlider').value);
-            console.log("maxLatSlider value:", document.getElementById('maxLatSlider').value);
-            console.log("minLonSlider value:", document.getElementById('minLonSlider').value);
-            console.log("maxLonSlider value:", document.getElementById('maxLonSlider').value);
-            console.log("minDepthSlider value:", document.getElementById('minDepthSlider').value);
-            console.log("maxDepthSlider value:", document.getElementById('maxDepthSlider').value);
             document.getElementById('maxLatValue').textContent = this.value;
             updateBoxOutline(parseFloat(document.getElementById('minLatSlider').value), parseFloat(this.value), parseFloat(document.getElementById('minLonSlider').value), parseFloat(document.getElementById('maxLonSlider').value), parseFloat(document.getElementById('minDepthSlider').value), parseFloat(document.getElementById('maxDepthSlider').value), parseFloat(document.getElementById('alphaSlider').value));
         });
 
-        console.log("minLonSlider event listener");
         document.getElementById('minLonSlider').addEventListener('input', function () {
-            console.log("minLatSlider value:", document.getElementById('minLatSlider').value);
-            console.log("maxLatSlider value:", document.getElementById('maxLatSlider').value);
-            console.log("minLonSlider value:", document.getElementById('minLonSlider').value);
-            console.log("maxLonSlider value:", document.getElementById('maxLonSlider').value);
-            console.log("minDepthSlider value:", document.getElementById('minDepthSlider').value);
-            console.log("maxDepthSlider value:", document.getElementById('maxDepthSlider').value);
             document.getElementById('minLonValue').textContent = this.value;
             updateBoxOutline(parseFloat(document.getElementById('minLatSlider').value), parseFloat(document.getElementById('maxLatSlider').value), parseFloat(this.value), parseFloat(document.getElementById('maxLonSlider').value), parseFloat(document.getElementById('minDepthSlider').value), parseFloat(document.getElementById('maxDepthSlider').value), parseFloat(document.getElementById('alphaSlider').value));
         });
 
-        console.log("maxLonSlider event listener");
         document.getElementById('maxLonSlider').addEventListener('input', function () {
-            console.log("minLatSlider value:", document.getElementById('minLatSlider').value);
-            console.log("maxLatSlider value:", document.getElementById('maxLatSlider').value);
-            console.log("minLonSlider value:", document.getElementById('minLonSlider').value);
-            console.log("maxLonSlider value:", document.getElementById('maxLonSlider').value);
-            console.log("minDepthSlider value:", document.getElementById('minDepthSlider').value);
-            console.log("maxDepthSlider value:", document.getElementById('maxDepthSlider').value);
             document.getElementById('maxLonValue').textContent = this.value;
             updateBoxOutline(parseFloat(document.getElementById('minLatSlider').value), parseFloat(document.getElementById('maxLatSlider').value), parseFloat(document.getElementById('minLonSlider').value), parseFloat(this.value), parseFloat(document.getElementById('minDepthSlider').value), parseFloat(document.getElementById('maxDepthSlider').value), parseFloat(document.getElementById('alphaSlider').value));
         });
 
-        console.log("minDepthSlider event listener");
         document.getElementById('minDepthSlider').addEventListener('input', function () {
-            console.log("minLatSlider value:", document.getElementById('minLatSlider').value);
-            console.log("maxLatSlider value:", document.getElementById('maxLatSlider').value);
-            console.log("minLonSlider value:", document.getElementById('minLonSlider').value);
-            console.log("maxLonSlider value:", document.getElementById('maxLonSlider').value);
-            console.log("minDepthSlider value:", document.getElementById('minDepthSlider').value);
-            console.log("maxDepthSlider value:", document.getElementById('maxDepthSlider').value);
             document.getElementById('minDepthValue').textContent = this.value;
             updateBoxOutline(parseFloat(document.getElementById('minLatSlider').value), parseFloat(document.getElementById('maxLatSlider').value), parseFloat(document.getElementById('minLonSlider').value), parseFloat(document.getElementById('maxLonSlider').value), parseFloat(this.value), parseFloat(document.getElementById('maxDepthSlider').value), parseFloat(document.getElementById('alphaSlider').value));
         });
 
-        console.log("maxDepthSlider event listener");
         document.getElementById('maxDepthSlider').addEventListener('input', function () {
-            console.log("minLatSlider value:", document.getElementById('minLatSlider').value);
-            console.log("maxLatSlider value:", document.getElementById('maxLatSlider').value);
-            console.log("minLonSlider value:", document.getElementById('minLonSlider').value);
-            console.log("maxLonSlider value:", document.getElementById('maxLonSlider').value);
-            console.log("minDepthSlider value:", document.getElementById('minDepthSlider').value);
-            console.log("maxDepthSlider value:", document.getElementById('maxDepthSlider').value);
             document.getElementById('maxDepthValue').textContent = this.value;
             updateBoxOutline(parseFloat(document.getElementById('minLatSlider').value), parseFloat(document.getElementById('maxLatSlider').value), parseFloat(document.getElementById('minLonSlider').value), parseFloat(document.getElementById('maxLonSlider').value), parseFloat(document.getElementById('minDepthSlider').value), parseFloat(this.value), parseFloat(document.getElementById('alphaSlider').value));
         });
-        console.log("alphaSlider event listener");
         document.getElementById('alphaSlider').addEventListener('input', function () {
-            console.log("minLatSlider value:", document.getElementById('minLatSlider').value);
-            console.log("maxLatSlider value:", document.getElementById('maxLatSlider').value);
-            console.log("minLonSlider value:", document.getElementById('minLonSlider').value);
-            console.log("maxLonSlider value:", document.getElementById('maxLonSlider').value);
-            console.log("minDepthSlider value:", document.getElementById('minDepthSlider').value);
-            console.log("maxDepthSlider value:", document.getElementById('maxDepthSlider').value);
             document.getElementById('alphaValue').textContent = this.value;
             // This line has a bug in it and should instead look like the next line of code
             //updateBoxOutline(parseFloat(document.getElementById('minLatSlider').value), parseFloat(document.getElementById('maxLatSlider').value), parseFloat(document.getElementById('minLonSlider').value), parseFloat(document.getElementById('maxLonSlider').value), parseFloat(document.getElementById('minDepthSlider').value), parseFloat(this.value), parseFloat(document.getElementById('alphaSlider').value));
             updateBoxOutline(parseFloat(document.getElementById('minLatSlider').value), parseFloat(document.getElementById('maxLatSlider').value), parseFloat(document.getElementById('minLonSlider').value), parseFloat(document.getElementById('maxLonSlider').value), parseFloat(document.getElementById('minDepthSlider').value), parseFloat(document.getElementById('maxDepthSlider').value), parseFloat(this.value));
         });
 
-        console.log("Spot 1");
-        console.log("data-file value", document.getElementById('data-file').value);
         document.getElementById('data-file').addEventListener('change', updateSlidersFromDropdown);
 
         // Load initial dropdown and update sliders
-   
-        console.log("Call loadDropdown to load the initial dropdown");
         loadDropdown();
 
         var points = [];

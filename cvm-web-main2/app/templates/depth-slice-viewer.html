@@ -197,11 +197,9 @@
     async function loadDropdown() {
         try {
             const response = await fetch('/models_drop_down');
-            console.log("response inside depth-slice-viewer.html:", response);
             if (response.ok) {
                 const dropdownHTML = await response.text();
                 document.getElementById('data-file').innerHTML = dropdownHTML;
-                console.log("data-file inside depth-slice-viewer.html:", document.getElementById('data-file'));
             } else {
                 console.error('Failed to load dropdown:', response.statusText);
                 document.getElementById('data-file').textContent = 'Failed to load dropdown.';
