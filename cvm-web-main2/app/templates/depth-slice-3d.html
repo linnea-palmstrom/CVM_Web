@@ -15,7 +15,10 @@
 
         #cesiumContainer {
             width: 100%;
-            height: calc(85vh - 55px);
+            /* height: calc(85vh - 55px); */
+            /* I changed the height of the Cesium container so that the 
+            legend does not overlap it at the bottom. */
+            height: calc(85vh - 100px);
             float: left;
             position: relative;
         }
@@ -58,7 +61,8 @@
 
         #logoContainer {
             position: absolute;
-            bottom: 110px;
+            /* bottom: 110px; */
+            bottom: 120px;
             right: 10px;
             z-index: 1;
         }
@@ -72,10 +76,17 @@
             float: left;
             padding: 20px;
             position: absolute;
-            bottom: 110px;
+            /* bottom: 110px; */
+            bottom: 120px;
             background-color: rgba(255, 255, 255, 0.8);
             border-radius: 5px;
         }
+        
+        /* 
+        This is the original auxLegendContainer code. I changed it
+        so that the auxLegendContainer has a flex display since the
+        CVM Coverage legend item has a flex display and caused the
+        other legend item to get pushed up and overlap with items above it.
 
         #auxLegendContainer {
             width: auto;
@@ -85,6 +96,21 @@
             bottom: 60px;
             background-color: rgba(255, 255, 255, 0.8);
             border-radius: 5px;
+        }
+        */
+
+        #auxLegendContainer {
+            width: auto;
+            float: left;
+            padding: 20px;
+            position: absolute;
+            bottom: 60px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 5px;
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            gap: 30px;
         }
 
         .legendItem {
@@ -98,6 +124,31 @@
             height: 20px;
             display: inline-block;
             margin-right: 5px;
+        }
+
+        /* Defaults for the color bars (not including the labels associated with them) */ 
+        .legendColorBar {
+            width: 150px;
+            height: 20px;
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        /* Defaults for the container that holds both the color bar and its minimum/maximum values */ 
+        .colorBarValLabel {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 2px;
+        }
+
+        /* Defaults for the class that holds the minimum/maximum values for the color bars */ 
+        .colorBarValues {
+            font-size: 10px;
+        }
+
+        /* Defaults for the class that holds labels for the color bars (located on the right-hand side of the bar) */ 
+        .colorBarLabel {
+            margin-left: 5px;
         }
 
         .checkboxRow {
@@ -202,43 +253,57 @@
                 </select>
             </div>
             <div>&nbsp;</div>
+            <!-- Dropdown for the slider animation to determine which axis to animate -->
+            <div>
+                <label for="anim-axis">Animation Axis:</label>
+                <select id="anim-axis" name="anim_axis">
+                    <option value="none">none</option>
+                    <option value="latitude">latitude</option>
+                    <option value="longitude">longitude</option>
+                    <option value="depth">depth</option>
+                    <option value="diagonal">diagonal</option>
+                </select>
+            </div>
+            <!-- Slider to change the time for the slice animation -->
+            <div class="sliderContainer">
+                <label class="sliderLabel">Animation Time (sec): <input type="range" id="animLength" min="1.0" max="80.0"
+                        step="0.1" value="30"></label>
+                <span id="animLengthValue">30</span>
+            </div>
+            <!-- Button to start the slice animation -->
+            <button type="button" class="button" id="animButton">Animate Slices</button>
+            <!-- Slider to change the minimum latitude of the bounding box -->
             <div class="sliderContainer">
                 <label class="sliderLabel">Min Latitude: <input type="range" id="minLatSlider" min="47" max="50.9"
                         step="0.1" value="47"></label>
                 <span id="minLatValue">47</span>
             </div>
+            <!-- Slider to change the maximum latitude of the bounding box -->
             <div class="sliderContainer">
                 <label class="sliderLabel">Max Latitude: <input type="range" id="maxLatSlider" min="47" max="50.9"
                         step="0.1" value="50.9"></label>
                 <span id="maxLatValue">50.9</span>
             </div>
+            <!-- Slider to change the minimum longitude of the bounding box -->
             <div class="sliderContainer">
                 <label class="sliderLabel">Min Longitude: <input type="range" id="minLonSlider" min="-126" max="-121.1"
                         step="0.1" value="-126"></label>
                 <span id="minLonValue">-126</span>
             </div>
+            <!-- Slider to change the maximum longitude of the bounding box -->
             <div class="sliderContainer">
                 <label class="sliderLabel">Max Longitude: <input type="range" id="maxLonSlider" min="-126" max="-121.1"
                         step="0.1" value="-121.1"></label>
                 <span id="maxLonValue">-121.1</span>
             </div>
+            <!-- Slider to change the minimum depth of the bounding box -->
             <div class="sliderContainer">
                 <label class="sliderLabel">Depth (km): <input type="range" id="minDepthSlider" min="0" max="93" step="1"
                         value="0"></label>
                 <span id="minDepthValue">0</span>
             </div>
-            <!-- I tried implementing a diagonal slice toggle and slider, but I have not been able to get it working yet -->
-            <!--div id="toggleDiagSlice"-->
-                <!--label-->
-                    <!--input type="checkbox" id="toggleDiagSliceCheckbox">Diagonal Slice-->
-                <!--/label-->
-            <!--/div-->
-            <!--div class="sliderContainer"-->
-                <!--label class="sliderLabel">Diagonal Slice (%): <input type="range" id="diagSlider" min="0" max="100" step="1"
-                        value="0"--><!--/label-->
-                <!--span id="diagValue">0</span-->
-            <!--/div-->
 
+            <!-- Slider to change the maximum depth of the bounding box -->
             <!-- Change the maxDepthSlider so it appears on the webpage which allows me to add the other sides of the bounding box to the globe -->
             <!--div class="sliderContainer" style="display: none;"-->
             <div class="sliderContainer">
@@ -246,6 +311,20 @@
                         step="1" value="93"></label>
                 <span id="maxDepthValue">93</span>
             </div>
+
+            <!-- I tried implementing a diagonal slice toggle and slider, but I have not been able to get it working yet -->
+            <div id="toggleDiagSlice">
+                <label>
+                    <input type="checkbox" id="toggleDiagSliceCheckbox">Diagonal Slice
+                </label>
+            </div>
+            <!-- Slider to change what percentage along the diagonal axis going from the bottom left corner to the top right corner (relative to the default view of the globe) of the bounding box to get the diagonal slice -->
+            <div class="sliderContainer" id="diagSliderWrapper">
+                <label class="sliderLabel">Diagonal Slice (%): <input type="range" id="diagSlider" min="0" max="100" step="1"
+                        value="0"></label>
+                <span id="diagValue">0</span>
+            </div>
+            <!-- Slider to change the transparency of the bounding box slices (lower values are more transparent) -->
             <div class="sliderContainer">
                 <label class="sliderLabel">Alpha: <input type="range" id="alphaSlider" min="0" max="1" step="0.1"
                         value="0.3"></label>
@@ -357,10 +436,10 @@
 
         var dataSources = [];
         const auxData = ["https://raw.githubusercontent.com/cascadiaquakes/crescent-cfm/main/crescent_cfm_files/cascadia_subduction_interface_temp.geojson"];
-        const auxLabel = ["Cascadia Subduction Interface", "CVM Coverage"];
-        const auxColor = [Cesium.Color.GREEN, Cesium.Color.BLUE];
-        const auxFillOpacity = [0.5, 0.5];
-        const auxLineWidth = [4, 4];
+        const auxLabel = ["Cascadia Subduction Interface"];
+        const auxColor = [Cesium.Color.GREEN];
+        const auxFillOpacity = [0.5];
+        const auxLineWidth = [4];
 
         var data = ['/static/boundary_geojson/us-states.json', '/static/boundary_geojson/georef-canada-province-public.geojson', 'https://raw.githubusercontent.com/cascadiaquakes/crescent-cfm/main/crescent_cfm_files/crescent_cfm_crustal_traces.geojson', 'https://raw.githubusercontent.com/cascadiaquakes/crescent-cfm/main/crescent_cfm_files/crescent_cfm_crustal_3d.geojson'];
         var label = ['US', 'Canada', 'CRESCENT Cascadia Fault Traces', 'CRESCENT Cascadia Fault Surfaces', 'Earthquakes M > 4'];
@@ -376,7 +455,7 @@
         var boxEntityEdge2;
         var boxEntityEdge3;
         var boxEntityEdge4;
-        //var boxEntityDiag;
+        var diagEntity;
 
         async function loadDropdown() {
             try {
@@ -602,6 +681,7 @@
             })(i);
         }
 
+        // Create the legend for the fault traces, fault surfaces, earthquake locations and country bountries
         var legendContainer = document.getElementById('legendContainer');
         label.forEach(function (labelText, i) {
             var legendItem = document.createElement('div');
@@ -619,7 +699,9 @@
             legendContainer.appendChild(legendItem);
         });
 
+        // Create the legend for the Cascadia Subduction Interface
         var auxLegendContainer = document.getElementById('auxLegendContainer');
+
         auxColor.forEach(function (color, i) {
             var legendItem = document.createElement('div');
             legendItem.classList.add('legendItem');
@@ -635,6 +717,44 @@
             legendItem.appendChild(legendLabel);
             auxLegendContainer.appendChild(legendItem);
         });
+        // Create the legend for the bounding box slices from the CVM
+        var cvmLegendItem = document.createElement('div');
+        cvmLegendItem.classList.add('legendItem');
+        // Change the display to flex so the label is to the right of the color bar
+        cvmLegendItem.style.display = "flex";
+
+        var legendColorTest = document.createElement('div');
+        legendColorTest.classList.add('legendColorBar');
+        legendColorTest.style.background = "linear-gradient( 90deg, rgb(0, 0, 255) 0%, rgb(0, 255, 255) 25%, rgb(0, 255, 0) 50%, rgb(255, 255, 0) 75%, rgb(255, 0, 0) 100%)";
+
+        // Create a container that holds both the color bar and its minimum/maximum values for the CVM data set
+        var colorBarAndVals = document.createElement('div');
+        colorBarAndVals.style.width = "150px";
+
+        colorBarAndVals.appendChild(legendColorTest);
+
+        var colorBarVals = document.createElement('div');
+        colorBarVals.classList.add('colorBarValLabel');
+
+        var minColorBarVal = document.createElement('span');
+        minColorBarVal.classList.add('colorBarValues');
+        minColorBarVal.textContent = "0.0"; // Default value
+
+        var maxColorBarVal = document.createElement('span');
+        maxColorBarVal.classList.add('colorBarValues');
+        maxColorBarVal.textContent = "5.0"; // Default value
+
+        colorBarVals.appendChild(minColorBarVal);
+        colorBarVals.appendChild(maxColorBarVal);
+        colorBarAndVals.appendChild(colorBarVals);
+
+        var cvmLegendLabel = document.createElement('span');
+        cvmLegendLabel.classList.add('colorBarLabel');
+        cvmLegendLabel.textContent = "CVM Coverage";
+
+        cvmLegendItem.appendChild(colorBarAndVals);
+        cvmLegendItem.appendChild(cvmLegendLabel);
+        auxLegendContainer.appendChild(cvmLegendItem);
         
         // Update the options given in the data-file and data-vars dropdown menus
         // when the webpage is first loaded.
@@ -682,7 +802,7 @@
                     }
 
                     // Get the array of variables that are associated with the model selected in the data-file dropdown
-                    let selected_data_set_vars = ['vs'];
+                    let selected_data_set_vars = ['vs'];  // Set the default array of variables to be vs
 
                     for (var i = 0; i < dropdown_models.length; i++) {
                         if (dropdown_models[i] == selected_data_set) {
@@ -706,6 +826,13 @@
                 console.error('Error fetching variable dropdown:', error);
                 document.getElementById('data-vars').textContent = 'Error loading variable dropdown.';
             }
+            // Update the anim-axis dropdown options based on what is selected
+            // in the data-file dropdown menu
+            var selected_data_set = document.getElementById('data-file').options[document.getElementById('data-file').selectedIndex].text;
+            var diag_slider = document.getElementById('diagSliderWrapper');
+            var diag_val = document.getElementById('diagValue');
+            var diag_checkbox = document.getElementById('toggleDiagSlice');
+            toggleDiagOptions(selected_data_set, diag_checkbox, diag_slider, diag_val);
         }
         // Update the options given in the data-vars dropdown menu after the webpage has finished
         // loading for the first time (this function is called every time the selected model in the
@@ -763,12 +890,42 @@
                 console.error('Error fetching variable dropdown:', error);
                 document.getElementById('data-vars').textContent = 'Error loading variable dropdown.';
             }
+            // Update the anim-axis dropdown options based on what is selected
+            // in the data-file dropdown menu
+            var selected_data_set = document.getElementById('data-file').options[document.getElementById('data-file').selectedIndex].text;
+            var diag_slider = document.getElementById('diagSliderWrapper');
+            var diag_val = document.getElementById('diagValue');
+            var diag_checkbox = document.getElementById('toggleDiagSlice');
+            toggleDiagOptions(selected_data_set, diag_checkbox, diag_slider, diag_val);
+        }
+
+        // Toggle the visibility of the diagonal slice options depending on which data set is 
+        // selected in the data-file dropdown menu. The inputs for the function are the data set
+        // selected in the CVM (data-file) dropdown menu, whether the Diagonal Slice checkbox 
+        // (toggleDiagSlice) is checked or not, the Diagonal Slice slider container (diagSliderWrapper) 
+        // and the value selected from the Diagonal Slice slider (diagValue).
+        function toggleDiagOptions(data_set, diag_checkbox, diag_slider, diag_val) {
+            // I currently only have diagonal slices for the SVI_EQTOMO_Savard2018 data set. Update this if statement once more diagonal slices are added for the other data sets.
+            if (data_set == 'SVI_EQTOMO_Savard2018') {
+                document.getElementById('anim-axis').innerHTML = "<option value=\"none\">none</option> <option value=\"latitude\">latitude</option> <option value=\"longitude\">longitude</option> <option value=\"depth\">depth</option> <option value=\"diagonal\">diagonal</option>";
+                diag_checkbox.style.display = 'flex';
+                diag_slider.style.display = 'block';
+            } else {
+                document.getElementById('anim-axis').innerHTML = "<option value=\"none\">none</option> <option value=\"latitude\">latitude</option> <option value=\"longitude\">longitude</option> <option value=\"depth\">depth</option>";
+                // Change the visibility so that the diagonal checkbox and slider are invisible
+                diag_checkbox.style.display = 'none';
+                diag_slider.style.display = 'none';
+                // Make sure the diagonal slice checkbox is unchecked
+                document.getElementById('toggleDiagSliceCheckbox').checked = false;
+            }
         }
 
         // Call loadDropdown when the page has finished loading
         document.addEventListener('DOMContentLoaded', loadDropdown);
 
-        // Function that updates the dimensions of each side of the bounding box and the slice images shown
+        // Function that updates the dimensions of each side of the bounding box and the slice images shown. It takes
+        // as input the values selected from the Min Latitude, Max Latitude, Min Longitude, Max Longitude, Depth, Max Depth
+        // and Alpha sliders.
         async function updateBoxOutline(minLat, maxLat, minLon, maxLon, minDepth, maxDepth, alpha) {
             // Clear all items in localStorage for the current origin
             localStorage.clear();
@@ -778,15 +935,16 @@
             // fetch the json file with the information about the group of slice images
             var data_set = document.getElementById('data-file').options[document.getElementById('data-file').selectedIndex].text;
             var data_var = document.getElementById('data-vars').options[document.getElementById('data-vars').selectedIndex].text;
-            var jsonFile = '../static/json/LP4.json';
+            var jsonFile = '../static/json/Cascadia_ANT+RF_Delph2018_slices.json';
 
             if (data_set == 'Cascadia_ANT+RF_Delph2018') {
-                jsonFile = '../static/json/LP4.json';
+                jsonFile = '../static/json/Cascadia_ANT+RF_Delph2018_slices.json';
             } else if (data_set == 'SVI_EQTOMO_Savard2018') {
-                jsonFile = '../static/json/LP6.json';
+                jsonFile = '../static/json/SVI_EQTOMO_Savard2018_slices.json';
             } else {  // I plan to add the casc1.6_velmdl slices to the webpage later
                 console.log("The data set selected is not available");
             }
+            // Set default values for all of the form fields in the json file
             var numImgs = 0;
             var dirName = '';
             var imgStem = '';
@@ -799,30 +957,25 @@
             var latDirName = '';
             var latImgStem = '';
             var latMinPer = 0;
+            var vsMin = 0;
+            var vsMax = 0;
+            var vsUnits = '';
+            var rhoMin = 0;
+            var rhoMax = 0;
+            var rhoUnits = '';
             var jsonData = {};
 
             // Try to read the json file
             try {
+                // Add a timestamp or a version number to the URL to make sure the newest json file is fetched (comment these two lines out when I am not debugging the code to make the webpage run faster)
+                //const cacheBuster = new Date().getTime(); 
+                //const response = await fetch(jsonFile + "?v=" + cacheBuster);
                 const response = await fetch(jsonFile);
                 if (!response.ok) {
                     throw new Error('Failed to load JSON: ${response.statusText}');
                 }
-                jsonData = await response.json();
 
-                // Extract JSON values or set them to default values (if they don't exist)
-                
-                numImgs = jsonData.num_images || 1;
-                dirName = jsonData.dir_name || '';
-                imgStem = jsonData.img_stem || '';
-                minPer = jsonData.min_per || 0;
-                lonNumImgs = jsonData.lon_axis_num_images || 1;
-                lonDirName = jsonData.lon_axis_dir_name || '';
-                lonImgStem = jsonData.lon_axis_img_stem || '';
-                lonMinPer = jsonData.lon_axis_min_per || 0;
-                latNumImgs = jsonData.lat_axis_num_images || 1;
-                latDirName = jsonData.lat_axis_dir_name || '';
-                latImgStem = jsonData.lat_axis_img_stem || '';
-                latMinPer = jsonData.lat_axis_min_per || 0;
+                jsonData = await response.json();
 
             } catch (e) {
                 console.error("Error processing JSON data:", e);
@@ -869,6 +1022,61 @@
                 if (key === "lat_axis_min_per") {
                     latMinPer = value;
                 }
+                if (key === "vs_min_val") {
+                    vsMin = value;
+                }
+                if (key === "vs_max_val") {
+                    vsMax = value;
+                }
+                if (key === "vs_units") {
+                    vsUnits = value;
+                }
+                if (key === "rho_min_val") {
+                    rhoMin = value;
+                }
+                if (key === "rho_max_val") {
+                    rhoMax = value;
+                }
+                if (key === "rho_units") {
+                    rhoUnits = value;
+                }
+            }
+
+            // Update the minimum and maximum values of the CVM Coverage legend
+            var colorBarMinMaxVals = document.querySelectorAll(".colorBarValues");
+            
+            if (!colorBarMinMaxVals) {
+                console.error("Color bar legend min max values not found");
+                return;
+            }
+
+            if (data_var === "vs") {
+                colorBarMinMaxVals[0].textContent = vsMin;
+                colorBarMinMaxVals[1].textContent = vsMax;
+            }
+            if (data_var === "rho") {
+                colorBarMinMaxVals[0].textContent = rhoMin;
+                colorBarMinMaxVals[1].textContent = rhoMax;
+            }
+
+            // Update the units of the CVM Coverage legend
+            var cvmLabel = document.querySelector(".colorBarLabel"); // Only one color bar/color bar label is in the legend
+
+            if (!cvmLabel) {
+                console.error("Color bar legend label element not found");
+                return;
+            }
+
+            var newCVMLabel = "CVM Coverage";
+    
+            // Add the units to the end of the label depending on the variable selected
+            if (data_var === "vs") {
+                newCVMLabel = newCVMLabel + " (" + vsUnits + ")";
+                cvmLabel.textContent = newCVMLabel;
+            }
+            if (data_var === "rho") {
+                newCVMLabel = newCVMLabel + " (" + rhoUnits + ")";
+                cvmLabel.textContent = newCVMLabel;
             }
 
             // Coordinates for the four corners.
@@ -952,12 +1160,6 @@
             const minLatSliderTest = document.getElementById('minLatSlider');
             const maxLatSliderTest = document.getElementById('maxLatSlider');
             const alphaSliderVal = document.getElementById('alphaSlider');
-
-            // I was testing out my diagonal slider here to see if I could get it working
-            //const diagSliderTest = document.getElementById('diagSlider');
-            //console.log("Diagonal Slider value: ", diagSliderTest.value);
-            //console.log("Diagonal Slider min value: ", diagSliderTest.min);
-            //console.log("Diagonal Slider max value: ", diagSliderTest.max);
 
             
             var minDepthTest = minDepthSliderTest.min;
@@ -1492,7 +1694,6 @@
                         translucent: true
                     }),
                 }),
-                //asynchronous: false,
                 asynchronous: true,
             }));
             boxEntityEdge1 = viewer.scene.primitives.add(new Cesium.Primitive({
@@ -1516,7 +1717,6 @@
                         translucent: true
                     }),
                 }),
-                //asynchronous: false,
                 asynchronous: true,
             }));
             boxEntityEdge2 = viewer.scene.primitives.add(new Cesium.Primitive({
@@ -1540,7 +1740,6 @@
                         translucent: true
                     }),
                 }),
-                //asynchronous: false,
                 asynchronous: true,
             }));
             boxEntityEdge3 = viewer.scene.primitives.add(new Cesium.Primitive({
@@ -1564,7 +1763,6 @@
                         translucent: true
                     }),
                 }),
-                //asynchronous: false,
                 asynchronous: true,
             }));
             boxEntityEdge4 = viewer.scene.primitives.add(new Cesium.Primitive({
@@ -1588,7 +1786,6 @@
                         translucent: true
                     }),
                 }),
-                //asynchronous: false,
                 asynchronous: true,
             }));
             
@@ -1608,6 +1805,9 @@
                 const minDepthSlider = document.getElementById('minDepthSlider');
                 const maxDepthSlider = document.getElementById('maxDepthSlider');
 
+                // Update the minimum and maximum values as well as the default selected value 
+                // for the different sliders based on the CVM data set chosen from the data-file
+                // dropdown
                 minLonSlider.min = parseFloat(limits[0]);
                 minLonSlider.max = parseFloat(limits[1]);
                 minLonSlider.value = parseFloat(limits[0]);
@@ -1638,8 +1838,12 @@
                 maxDepthSlider.value = parseFloat(limits[5]);
                 document.getElementById('maxDepthValue').textContent = maxDepthSlider.value;
 	        
-
-                updateBoxOutline(parseFloat(minLatSlider.value), parseFloat(maxLatSlider.value), parseFloat(minLonSlider.value), parseFloat(maxLonSlider.value), parseFloat(minDepthSlider.value), parseFloat(maxDepthSlider.value), parseFloat(document.getElementById('alphaSlider').value));
+                // Update the slice images of the bounding box/diagonal slice to match the new data set
+                if (!document.getElementById('toggleDiagSliceCheckbox').checked) {
+                    updateBoxOutline(parseFloat(minLatSlider.value), parseFloat(maxLatSlider.value), parseFloat(minLonSlider.value), parseFloat(maxLonSlider.value), parseFloat(minDepthSlider.value), parseFloat(maxDepthSlider.value), parseFloat(document.getElementById('alphaSlider').value));
+                } else {
+                    updateDiagonal(document.getElementById('toggleDiagSliceCheckbox').checked, parseFloat(document.getElementById('diagSlider').value), parseFloat(document.getElementById('alphaSlider').value));
+                }
             } else {
                 if (boxEntityTop) {
                     viewer.scene.primitives.remove(boxEntityTop);
@@ -1668,41 +1872,400 @@
             }
         }
 
+        // Utility function to create a delay where ms is the delay in milliseconds
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+ 
+        // This function runs an animation of all of the slice images along one of the axes (latitude, longitude, depth or
+        // along a diagonal through the data). It takes as input the current values selected with the Min Latitude, Max
+        // Latitude, Min Longitude, Max Longitude, Depth, Max Depth, Diagonal Slice and Alpha sliders as well as the axis
+        // chosen in the Animation Axis dropdown, the value selected with the Animation Time slider and the number of slices/frames
+        // to run through in the animation.
+        async function runAnimation(minLat, maxLat, minLon, maxLon, minDepth, maxDepth, diag, alpha, axis, time, numFrames) {
+            const timeStepSize = (time/numFrames) * 1000; // The time to pause between each slice is given in milliseconds
+            
+            // Remove any previous diagonal slice primitive that was added to the scene
+            if (diagEntity !== null) {
+                viewer.scene.primitives.remove(diagEntity);
+            }
+
+            // If the animation axis is set to anything other than "none," then run the animation for the
+            // selected axis
+            if (axis == "latitude") {
+                const latRange = maxLat - minLat;
+                const latStepSize = latRange/numFrames;
+
+                let newMinLat = minLat;
+
+                for (let i = 0; i < numFrames; i++) {
+                    newMinLat = newMinLat + latStepSize;
+                    document.getElementById('minLatValue').textContent = newMinLat.toFixed(2);
+                    document.getElementById('minLatSlider').value = newMinLat;
+                    // Call updateBoxOutline with the current slider values
+                    updateBoxOutline(newMinLat, maxLat, minLon, maxLon, minDepth, maxDepth, alpha);
+
+                    await delay(timeStepSize);
+                }
+            }
+            if (axis == "longitude") {
+                const lonRange = maxLon - minLon;
+                const lonStepSize = lonRange/numFrames;
+
+                let newMinLon = minLon;
+
+                for (let i = 0; i < numFrames; i++) {
+                    newMinLon = newMinLon + lonStepSize;
+                    document.getElementById('minLonValue').textContent = newMinLon.toFixed(2);
+                    document.getElementById('minLonSlider').value = newMinLon;
+                    // Call updateBoxOutline with the current slider values
+                    updateBoxOutline(minLat, maxLat, newMinLon, maxLon, minDepth, maxDepth, alpha);
+
+                    await delay(timeStepSize);
+                }
+            }
+            if (axis == "depth") {
+                const depthRange = maxDepth - minDepth;
+                const depthStepSize = depthRange/numFrames;
+
+                let newMinDepth = minDepth;
+
+                for (let i = 0; i < numFrames; i++) {
+                    newMinDepth = newMinDepth + depthStepSize;
+                    document.getElementById('minDepthValue').textContent = newMinDepth.toFixed(2);
+                    document.getElementById('minDepthSlider').value = newMinDepth;
+                    // Call updateBoxOutline with the current slider values
+                    updateBoxOutline(minLat, maxLat, minLon, maxLon, newMinDepth, maxDepth, alpha);
+
+                    await delay(timeStepSize);
+                }
+            }
+            if (axis == "diagonal") {
+                const maxDiag = parseFloat(document.getElementById('diagSlider').max);
+                const minDiag = parseFloat(document.getElementById('diagSlider').min);
+                const diagRange = maxDiag - minDiag;
+                const diagStepSize = diagRange/numFrames;
+
+                let newCurDiag = minDiag;
+
+                for (let i = 0; i < numFrames; i++) {
+                    newCurDiag = newCurDiag + diagStepSize;
+                    document.getElementById('diagValue').textContent = newCurDiag.toFixed(2);
+                    document.getElementById('diagSlider').value = newCurDiag;
+                    // Call updateDiagonal with the current slider values
+                    updateDiagonal(true, newCurDiag, alpha);
+
+                    await delay(timeStepSize);
+                }
+            }
+            // Call updateBoxOutline or updateDiagonal with the current slider values and set the slider values back to their original positions
+            if (!document.getElementById('toggleDiagSliceCheckbox').checked) {
+                updateBoxOutline(minLat, maxLat, minLon, maxLon, minDepth, maxDepth, alpha);
+            } else {
+                updateDiagonal(document.getElementById('toggleDiagSliceCheckbox').checked, diag, alpha);
+            }
+
+            document.getElementById('minLatValue').textContent = minLat;
+            document.getElementById('minLatSlider').value = minLat;
+            document.getElementById('minLonValue').textContent = minLon;
+            document.getElementById('minLonSlider').value = minLon;
+            document.getElementById('minDepthValue').textContent = minDepth;
+            document.getElementById('minDepthSlider').value = minDepth;
+            document.getElementById('diagValue').textContent = diag;
+            document.getElementById('diagSlider').value = diag;
+            
+
+        }
+        // Function that updates the dimensions and slice images shown for the diagonal slice.
+        // It takes as input whether the Diagonal Slice checkbox is checked or not, the value
+        // selected with the Diagonal Slice slider and the value selected with the Alpha slider.
+        async function updateDiagonal(diagToggle, diag, alpha) {
+            // Clear all items in localStorage for the current origin
+            localStorage.clear();
+
+            // Clear all items in sessionStorage for the current origin (session-specific)
+            sessionStorage.clear();
+            // fetch the json file with the information about the group of slice images
+            var data_set = document.getElementById('data-file').options[document.getElementById('data-file').selectedIndex].text;
+            var data_var = document.getElementById('data-vars').options[document.getElementById('data-vars').selectedIndex].text;
+            var jsonFile = '../static/json/Cascadia_ANT+RF_Delph2018_slices.json';
+
+            if (data_set == 'Cascadia_ANT+RF_Delph2018') {
+                jsonFile = '../static/json/Cascadia_ANT+RF_Delph2018_slices.json';
+            } else if (data_set == 'SVI_EQTOMO_Savard2018') {
+                jsonFile = '../static/json/SVI_EQTOMO_Savard2018_slices.json';
+            } else {  // I plan to add the casc1.6_velmdl slices to the webpage later
+                console.log("The data set selected is not available");
+            }
+            var diagNumImgs = 0;
+            var diagDirName = '';
+            var diagImgStem = '';
+            var diagMinPer = 0;
+            var jsonData = {};
+
+            // Try to read the json file
+            try {
+                const response = await fetch(jsonFile);
+                if (!response.ok) {
+                    throw new Error('Failed to load JSON: ${response.statusText}');
+                }
+                jsonData = await response.json();
+
+            } catch (e) {
+                console.error("Error processing JSON data:", e);
+                // If JSON data is critical and corrupted, prevent further rendering
+                return;
+            }
+
+
+            // Assuming the JSON structure matches your form fields' ids
+            for (const [key, value] of Object.entries(jsonData)) {
+                if (key === "diag_num_images") {
+                    diagNumImgs = value;
+                }
+                if (key === "diag_dir_name") {
+                    diagDirName = value;
+                }
+                if (key === "diag_img_stem") {
+                    diagImgStem = value;
+                }
+                if (key === "diag_min_per") {
+                    diagMinPer = value;
+                }
+            }
+
+            // Function that takes in the stem of the image name, the minimum percentage slice
+            // in VisIt where the slice contains data (which corresponds to the lowest number 
+            // at the end of the file name in the sequence of x-axis or z-axis slices), the current value
+            // of the lat/lon slider, the minimum and maximum values of the lat/lon slider, the 
+            // number of x-axis or z-axis slice images and the variable selected in the data-vars dropdown
+            // to return part of the file path and image name for the image that will be used as the
+            // texture for the bounding box side
+            function getImageName(stem, minPer, value, minVal, maxVal, numImages, varName) {
+
+	        var valDiff = value - minVal;
+                var valRange = (maxVal - minVal);
+            
+                let valImgsStep;
+                if (numImages <= 1) { // If only one image or zero images, step is irrelevant, assume index 0/minPer
+                    valImgsStep = 1;
+                } else {
+                    valImgsStep = (valRange * 1.0) / (numImages);
+                    if (valImgsStep === 0) { // If range is 0, but multiple images, step still 0, avoid division by zero
+                        valImgsStep = 1; // Assume only first image relevant if no range
+                    }
+                }
+
+                var valImgsIndx = minPer + Math.round(valDiff/valImgsStep);
+
+                // Clamp the index to valid bounds based on numImages and minPer
+                const maxValidIndex = minPer + numImages - 1;
+        
+                if (valImgsIndx < minPer) {
+                    valImgsIndx = minPer;
+                } else if (valImgsIndx > maxValidIndex) {
+                    valImgsIndx = maxValidIndex;
+                }
+
+                console.assert(Number.isInteger(valImgsIndx) && valImgsIndx >= 0, '[getImageName: ' + varName + '] Final index is not a valid non-negative integer!');
+
+                const texturePath = varName + '/' + varName + '_' + stem + valImgsIndx + '.png';
+                return texturePath;
+
+            }
+            if (boxEntityTop) {
+                viewer.scene.primitives.remove(boxEntityTop);
+                boxEntityTop = null;
+            }
+            if (boxEntityBottom) {
+                viewer.scene.primitives.remove(boxEntityBottom);
+                boxEntityBottom = null;
+            }
+            if (boxEntityEdge1) {
+                viewer.scene.primitives.remove(boxEntityEdge1);
+                boxEntityEdge1 = null;
+            }
+            if (boxEntityEdge2) {
+                viewer.scene.primitives.remove(boxEntityEdge2);
+                boxEntityEdge2 = null;
+            }
+            if (boxEntityEdge3) {
+                viewer.scene.primitives.remove(boxEntityEdge3);
+                boxEntityEdge3 = null;
+            }
+            if (boxEntityEdge4) {
+                viewer.scene.primitives.remove(boxEntityEdge4);
+                boxEntityEdge4 = null;
+            }
+            // Remove any previous diagonal slice primitive that was added to the scene from a previous call
+            if (diagEntity !== null) {
+                viewer.scene.primitives.remove(diagEntity);
+            }
+            const minDepthSliderTest = document.getElementById('minDepthSlider');
+            const maxDepthSliderTest = document.getElementById('maxDepthSlider');
+            const minLonSliderTest = document.getElementById('minLonSlider');
+            const maxLonSliderTest = document.getElementById('maxLonSlider');
+            const minLatSliderTest = document.getElementById('minLatSlider');
+            const maxLatSliderTest = document.getElementById('maxLatSlider');
+            const alphaSliderVal = document.getElementById('alphaSlider');
+
+            var minDepthTest = minDepthSliderTest.min;
+            var maxDepthTest = maxDepthSliderTest.max;
+            var minLonTest = minLonSliderTest.min;
+            var maxLonTest = maxLonSliderTest.max;
+            var minLatTest = minLatSliderTest.min;
+            var maxLatTest = maxLatSliderTest.max;
+
+            var latRange = maxLatTest - minLatTest;
+            var lonRange = maxLonTest - minLonTest;
+            var diagPer = diag/100;
+
+            const minLat = parseFloat(minLatTest);
+            const maxLat = parseFloat(maxLatTest);
+            const minLon = parseFloat(minLonTest);
+            const maxLon = parseFloat(maxLonTest);
+            const minDepth = parseFloat(minDepthTest);
+            const maxDepth = parseFloat(maxDepthTest);
+
+            if (diag > 50) {
+                // Coordinates for the four corners for the diagonal slice.
+                var positionsDiag = Cesium.Cartesian3.fromDegreesArrayHeights([
+                    minLon + (lonRange * (2 * (diagPer - 0.5))), minLat, minDepth * -1000,  // Longitude, Latitude, Height
+                    minLon + (lonRange * (2 * (diagPer - 0.5))), minLat, maxDepth * -1000,
+                    maxLon, maxLat - (latRange * (2 * (diagPer - 0.5))), maxDepth * -1000,
+                    maxLon, maxLat - (latRange * (2 * (diagPer - 0.5))), minDepth * -1000,
+                ]);
+            } else {
+                // Coordinates for the four corners for the diagonal slice.
+                var positionsDiag = Cesium.Cartesian3.fromDegreesArrayHeights([
+                    minLon, maxLat - (latRange * diagPer * 2), minDepth * -1000,  // Longitude, Latitude, Height
+                    minLon, maxLat - (latRange * diagPer * 2), maxDepth * -1000,
+                    minLon + (lonRange * diagPer * 2), maxLat, maxDepth * -1000,
+                    minLon + (lonRange * diagPer * 2), maxLat, minDepth * -1000,
+                ]);
+            }
+            // Get the file path and slice image name for the diagonal image that will be used as a texture for the diagonal slice
+            var textureImg = diagDirName.concat(getImageName(diagImgStem, diagMinPer, diag, parseFloat(document.getElementById('diagSlider').min), parseFloat(document.getElementById('diagSlider').max), diagNumImgs, data_var));
+
+            var numPositions = 4;
+            var pos = new Float64Array(numPositions * 3);
+                      for (var i = 0; i < numPositions; ++i) {
+                          pos[i * 3] = positionsDiag[i].x;
+                          pos[i * 3 + 1] = positionsDiag[i].y;
+                          pos[i * 3 + 2] = positionsDiag[i].z;
+                      }
+            
+            // Calculate the UV coordinates to determine how the images should be mapped to the diagonal slice
+            var min_y_ratio = (minLat - minLatSliderTest.min)/(maxLatSliderTest.max - minLatSliderTest.min);
+            var max_y_ratio = (maxLat - maxLatSliderTest.min)/(maxLatSliderTest.max - minLatSliderTest.min);
+            var indexs = new Uint16Array([0, 1, 2, 2, 3, 0]);
+            var min_z_ratio = (minDepth - minDepthSliderTest.min)/(maxDepthSliderTest.max - minDepthSliderTest.min);
+            var max_z_ratio = (maxDepth - maxDepthSliderTest.min)/(maxDepthSliderTest.max - minDepthSliderTest.min);
+            var uvsEdge1 = [min_z_ratio, min_y_ratio, max_z_ratio, min_y_ratio, max_z_ratio, max_y_ratio, min_z_ratio, max_y_ratio];
+
+            // Create the geometry for the diagonal slice primitive
+            var geometry = new Cesium.Geometry({
+              attributes: {
+                  position: new Cesium.GeometryAttribute({
+                      componentDatatype: Cesium.ComponentDatatype.DOUBLE,
+                      componentsPerAttribute: 3,
+                      values: pos
+                  }),
+                  st: new Cesium.GeometryAttribute({
+                    componentDatatype: Cesium.ComponentDatatype.FLOAT,
+                    componentsPerAttribute: 2,
+                    values: uvsEdge1
+                  })
+              },
+              indices : indexs,
+              primitiveType: Cesium.PrimitiveType.TRIANGLES,
+              boundingSphere: Cesium.BoundingSphere.fromVertices(pos)
+           });
+            // Create the geometry instance for the diagonal slice
+            var myInstance = new Cesium.GeometryInstance({
+                geometry: geometry,
+                attributes: {
+                    color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
+                }
+            });
+            diagEntity = viewer.scene.primitives.add(new Cesium.Primitive({
+                geometryInstances: myInstance,
+
+                id: 'diagEntity',
+
+                appearance: new Cesium.MaterialAppearance({
+                    material : new Cesium.Material({
+                      fabric : {
+                          type : 'MyCustomMap3',
+                          uniforms : {
+                              image : textureImg,
+                              color : new Cesium.Color(1.0, 0.0, 0.0, alphaSliderVal.value)
+                          },
+                          components : {
+                              emission : 'texture(image, materialInput.st).rgb',
+                              alpha : 'texture(image, materialInput.st).a * color.a'
+                          }
+                        },
+                        translucent: true
+                    }),
+                }),
+                asynchronous: true,
+            }));
+        }
         // Event listeners for the sliders
-        document.getElementById('minLatSlider').addEventListener('input', function () {
+        document.getElementById('minLatSlider').addEventListener('change', function () {
             document.getElementById('minLatValue').textContent = this.value;
-            updateBoxOutline(parseFloat(this.value), parseFloat(document.getElementById('maxLatSlider').value), parseFloat(document.getElementById('minLonSlider').value), parseFloat(document.getElementById('maxLonSlider').value), parseFloat(document.getElementById('minDepthSlider').value), parseFloat(document.getElementById('maxDepthSlider').value), parseFloat(document.getElementById('alphaSlider').value));
+            if (!document.getElementById('toggleDiagSliceCheckbox').checked) {
+                updateBoxOutline(parseFloat(this.value), parseFloat(document.getElementById('maxLatSlider').value), parseFloat(document.getElementById('minLonSlider').value), parseFloat(document.getElementById('maxLonSlider').value), parseFloat(document.getElementById('minDepthSlider').value), parseFloat(document.getElementById('maxDepthSlider').value), parseFloat(document.getElementById('alphaSlider').value));
+            }
         });
 
-        document.getElementById('maxLatSlider').addEventListener('input', function () {
+        document.getElementById('maxLatSlider').addEventListener('change', function () {
             document.getElementById('maxLatValue').textContent = this.value;
-            updateBoxOutline(parseFloat(document.getElementById('minLatSlider').value), parseFloat(this.value), parseFloat(document.getElementById('minLonSlider').value), parseFloat(document.getElementById('maxLonSlider').value), parseFloat(document.getElementById('minDepthSlider').value), parseFloat(document.getElementById('maxDepthSlider').value), parseFloat(document.getElementById('alphaSlider').value));
+            if (!document.getElementById('toggleDiagSliceCheckbox').checked) {
+                updateBoxOutline(parseFloat(document.getElementById('minLatSlider').value), parseFloat(this.value), parseFloat(document.getElementById('minLonSlider').value), parseFloat(document.getElementById('maxLonSlider').value), parseFloat(document.getElementById('minDepthSlider').value), parseFloat(document.getElementById('maxDepthSlider').value), parseFloat(document.getElementById('alphaSlider').value));
+            }
         });
 
-        document.getElementById('minLonSlider').addEventListener('input', function () {
+        document.getElementById('minLonSlider').addEventListener('change', function () {
             document.getElementById('minLonValue').textContent = this.value;
-            updateBoxOutline(parseFloat(document.getElementById('minLatSlider').value), parseFloat(document.getElementById('maxLatSlider').value), parseFloat(this.value), parseFloat(document.getElementById('maxLonSlider').value), parseFloat(document.getElementById('minDepthSlider').value), parseFloat(document.getElementById('maxDepthSlider').value), parseFloat(document.getElementById('alphaSlider').value));
+            if (!document.getElementById('toggleDiagSliceCheckbox').checked) {
+                updateBoxOutline(parseFloat(document.getElementById('minLatSlider').value), parseFloat(document.getElementById('maxLatSlider').value), parseFloat(this.value), parseFloat(document.getElementById('maxLonSlider').value), parseFloat(document.getElementById('minDepthSlider').value), parseFloat(document.getElementById('maxDepthSlider').value), parseFloat(document.getElementById('alphaSlider').value));
+            }
         });
 
-        document.getElementById('maxLonSlider').addEventListener('input', function () {
+        document.getElementById('maxLonSlider').addEventListener('change', function () {
             document.getElementById('maxLonValue').textContent = this.value;
-            updateBoxOutline(parseFloat(document.getElementById('minLatSlider').value), parseFloat(document.getElementById('maxLatSlider').value), parseFloat(document.getElementById('minLonSlider').value), parseFloat(this.value), parseFloat(document.getElementById('minDepthSlider').value), parseFloat(document.getElementById('maxDepthSlider').value), parseFloat(document.getElementById('alphaSlider').value));
+            if (!document.getElementById('toggleDiagSliceCheckbox').checked) {
+                updateBoxOutline(parseFloat(document.getElementById('minLatSlider').value), parseFloat(document.getElementById('maxLatSlider').value), parseFloat(document.getElementById('minLonSlider').value), parseFloat(this.value), parseFloat(document.getElementById('minDepthSlider').value), parseFloat(document.getElementById('maxDepthSlider').value), parseFloat(document.getElementById('alphaSlider').value));
+            }
         });
 
-        document.getElementById('minDepthSlider').addEventListener('input', function () {
+        document.getElementById('minDepthSlider').addEventListener('change', function () {
             document.getElementById('minDepthValue').textContent = this.value;
-            updateBoxOutline(parseFloat(document.getElementById('minLatSlider').value), parseFloat(document.getElementById('maxLatSlider').value), parseFloat(document.getElementById('minLonSlider').value), parseFloat(document.getElementById('maxLonSlider').value), parseFloat(this.value), parseFloat(document.getElementById('maxDepthSlider').value), parseFloat(document.getElementById('alphaSlider').value));
+            if (!document.getElementById('toggleDiagSliceCheckbox').checked) {
+                updateBoxOutline(parseFloat(document.getElementById('minLatSlider').value), parseFloat(document.getElementById('maxLatSlider').value), parseFloat(document.getElementById('minLonSlider').value), parseFloat(document.getElementById('maxLonSlider').value), parseFloat(this.value), parseFloat(document.getElementById('maxDepthSlider').value), parseFloat(document.getElementById('alphaSlider').value));
+            }
         });
 
-        document.getElementById('maxDepthSlider').addEventListener('input', function () {
+        document.getElementById('maxDepthSlider').addEventListener('change', function () {
             document.getElementById('maxDepthValue').textContent = this.value;
-            updateBoxOutline(parseFloat(document.getElementById('minLatSlider').value), parseFloat(document.getElementById('maxLatSlider').value), parseFloat(document.getElementById('minLonSlider').value), parseFloat(document.getElementById('maxLonSlider').value), parseFloat(document.getElementById('minDepthSlider').value), parseFloat(this.value), parseFloat(document.getElementById('alphaSlider').value));
+            if (!document.getElementById('toggleDiagSliceCheckbox').checked) {
+                updateBoxOutline(parseFloat(document.getElementById('minLatSlider').value), parseFloat(document.getElementById('maxLatSlider').value), parseFloat(document.getElementById('minLonSlider').value), parseFloat(document.getElementById('maxLonSlider').value), parseFloat(document.getElementById('minDepthSlider').value), parseFloat(this.value), parseFloat(document.getElementById('alphaSlider').value));
+            }
         });
         document.getElementById('alphaSlider').addEventListener('input', function () {
             document.getElementById('alphaValue').textContent = this.value;
             // This line has a bug in it and should instead look like the next line of code
             //updateBoxOutline(parseFloat(document.getElementById('minLatSlider').value), parseFloat(document.getElementById('maxLatSlider').value), parseFloat(document.getElementById('minLonSlider').value), parseFloat(document.getElementById('maxLonSlider').value), parseFloat(document.getElementById('minDepthSlider').value), parseFloat(this.value), parseFloat(document.getElementById('alphaSlider').value));
-            updateBoxOutline(parseFloat(document.getElementById('minLatSlider').value), parseFloat(document.getElementById('maxLatSlider').value), parseFloat(document.getElementById('minLonSlider').value), parseFloat(document.getElementById('maxLonSlider').value), parseFloat(document.getElementById('minDepthSlider').value), parseFloat(document.getElementById('maxDepthSlider').value), parseFloat(this.value));
+            if (!document.getElementById('toggleDiagSliceCheckbox').checked) {
+                updateBoxOutline(parseFloat(document.getElementById('minLatSlider').value), parseFloat(document.getElementById('maxLatSlider').value), parseFloat(document.getElementById('minLonSlider').value), parseFloat(document.getElementById('maxLonSlider').value), parseFloat(document.getElementById('minDepthSlider').value), parseFloat(document.getElementById('maxDepthSlider').value), parseFloat(this.value));
+            } else {
+                updateDiagonal(document.getElementById('toggleDiagSliceCheckbox').checked, parseFloat(document.getElementById('diagSlider').value), parseFloat(this.value));
+            }
+        });
+        document.getElementById('animLength').addEventListener('change', function () {
+            document.getElementById('animLengthValue').textContent = this.value;
         });
 
         document.getElementById('data-file').addEventListener('change', updateSlidersFromDropdown);
@@ -1718,9 +2281,67 @@
             const minDepth = parseFloat(document.getElementById('minDepthSlider').value);
             const maxDepth = parseFloat(document.getElementById('maxDepthSlider').value);
             const alpha = parseFloat(document.getElementById('alphaSlider').value);
+            const diag = parseFloat(document.getElementById('diagSlider').value);
 
-            // Call updateBoxOutline with the current slider values
-            updateBoxOutline(minLat, maxLat, minLon, maxLon, minDepth, maxDepth, alpha);
+            if (!document.getElementById('toggleDiagSliceCheckbox').checked) {
+                // Call updateBoxOutline with the current slider values
+                updateBoxOutline(minLat, maxLat, minLon, maxLon, minDepth, maxDepth, alpha);
+            } else {
+                updateDiagonal(document.getElementById('toggleDiagSliceCheckbox').checked, diag, alpha);
+            }
+        });
+
+        // Animate the slices from the min to the max slider values after the animButton button is pressed
+        document.getElementById('animButton').addEventListener('click', function() {
+            const minLat = parseFloat(document.getElementById('minLatSlider').value);
+            const maxLat = parseFloat(document.getElementById('maxLatSlider').value);
+            const minLon = parseFloat(document.getElementById('minLonSlider').value);
+            const maxLon = parseFloat(document.getElementById('maxLonSlider').value);
+            const minDepth = parseFloat(document.getElementById('minDepthSlider').value);
+            const diag = parseFloat(document.getElementById('diagSlider').value);
+            const maxDepth = parseFloat(document.getElementById('maxDepthSlider').value);
+            const alpha = parseFloat(document.getElementById('alphaSlider').value);
+            const animAxis = document.getElementById('anim-axis').value;
+            const animTime = parseFloat(document.getElementById('animLength').value);
+            const numFrames = 100;  // Set the number of slices for the animation to be 100 (all of the axes for the data sets I have created images for have fewer than 100 images in them)
+
+            // If the animation axis is set to anything other than "none," then run the animation for the
+            // selected axis
+            runAnimation(minLat, maxLat, minLon, maxLon, minDepth, maxDepth, diag, alpha, animAxis, animTime, numFrames);
+
+        });
+
+        // Update the diagonal slice slider's value when it is moved
+        document.getElementById('diagSlider').addEventListener('change', function () {
+            document.getElementById('diagValue').textContent = this.value;
+            if (document.getElementById('toggleDiagSliceCheckbox').checked) {
+                const alpha = parseFloat(document.getElementById('alphaSlider').value);
+                updateDiagonal(document.getElementById('toggleDiagSliceCheckbox').checked, parseFloat(this.value), alpha);
+            }
+        });
+   
+        // Remove the bounding box images and show the diagonal slice images instead when the diagonal slice checkbox is checked
+        document.getElementById('toggleDiagSliceCheckbox').addEventListener('change', function () {
+            const minLat = parseFloat(document.getElementById('minLatSlider').value);
+            const maxLat = parseFloat(document.getElementById('maxLatSlider').value);
+            const minLon = parseFloat(document.getElementById('minLonSlider').value);
+            const maxLon = parseFloat(document.getElementById('maxLonSlider').value);
+            const minDepth = parseFloat(document.getElementById('minDepthSlider').value);
+            const maxDepth = parseFloat(document.getElementById('maxDepthSlider').value);
+            const alpha = parseFloat(document.getElementById('alphaSlider').value);
+            const diag = parseFloat(document.getElementById('diagSlider').value);
+
+            // Remove the diagonal slice image and make the bounding box images visible again if the checkbox is unchecked
+            if (!this.checked) {
+                // Remove any previous diagonal slice primitive that was added to the scene from a previous call
+                if (diagEntity !== null) {
+                    viewer.scene.primitives.remove(diagEntity);
+                }
+                // Call updateBoxOutline with the current slider values
+                updateBoxOutline(minLat, maxLat, minLon, maxLon, minDepth, maxDepth, alpha);
+            } else {  // Remove the bounding box images and make the diagonal slice image visible when the checkbox is checked
+                updateDiagonal(this.checked, diag, alpha);
+            }
         });
 
         // Load initial dropdown and update sliders
